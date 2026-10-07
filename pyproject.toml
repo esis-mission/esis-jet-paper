@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "esis-jet-paper"
+authors = [
+    {name = "Roy T. Smart", email = "roytsmart@gmail.com"},
+]
+description = "An AAS journal article analyzing a transition region jet, event E, observed by the EUV Snapshot Imaging Spectrograph (ESIS)."
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "pylatex~=1.4",
+    "aastex~=0.7",
+    "matplotlib",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pymupdf",
+]
+doc = [
+    "pytest",
+    "matplotlib",
+    "graphviz",
+    "sphinx-autodoc-typehints",
+    "pydata-sphinx-theme",
+    "ipykernel",
+    "sphinx-favicon",
+]
+
+[project.urls]
+Homepage = "https://github.com/esis-mission/esis-jet-paper"
+
+[tool.setuptools.packages.find]
+include = ["esis_jet_paper*"]
+
+[tool.setuptools.package-data]
+esis_jet_paper = ["*.bib"]
+
+[tool.setuptools_scm]

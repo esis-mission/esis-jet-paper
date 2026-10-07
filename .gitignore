@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+.cache/
+
+# editors
+.idea/
+.vscode/
+.ipynb_checkpoints/
+
+# docs build
+docs/_build/
+docs/_autosummary/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
+# The generated article and its figures, which aastex writes next to the
+# .tex file. Both are reproducible by running `esis_jet_paper.pdf()`,
+# so neither is committed. Static figures that are not generated belong in a
+# subdirectory (e.g. `figures/static/`) so that they are not ignored here.
+esis_jet_paper/esis-jet.tex
+esis_jet_paper/*.pdf
+esis_jet_paper/*.png
+
+# The AASTeX class, bibliography style, and ORCID logo, which aastex copies
+# next to the .tex file at build time and leaves there when the .tex is kept.
+esis_jet_paper/aastex701.cls
+esis_jet_paper/aasjournalv7.bst
+
+# submission archives built by `aastex.Document.generate_archive()`
+*.zip
+*.tar.gz
