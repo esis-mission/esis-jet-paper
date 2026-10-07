@@ -75,6 +75,13 @@ jobs:
           mkdir -p "pages/${DIR}"
           cp article/esis-jet.pdf "pages/${DIR}/esis-jet.pdf"
 
+          # The movies of the animated figures, which no pdf reader plays, are
+          # published beside the article so that its captions can link to them.
+          # Those of the previous build are removed first, so that a movie
+          # which has been renamed or dropped does not linger.
+          rm -f "pages/${DIR}"/*.mp4
+          find article -maxdepth 1 -name '*.mp4' -exec cp {} "pages/${DIR}/" \;
+
           cd pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -93,11 +100,23 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           repo_name="${GITHUB_REPOSITORY#*/}"
-          url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${repo_name}/pr/${PR}/esis-jet.pdf"
-          body="<!-- pdf-preview -->
-          **Article preview:** [esis-jet.pdf](${url})
+          base="https://${GITHUB_REPOSITORY_OWNER}.github.io/${repo_name}/pr/${PR}"
+          movies=""
+          for movie in article/*.mp4; do
+            [ -e "$movie" ] || continue
+            name="$(basename "$movie")"
+            movies="${movies}
+          - [${name}](${base}/${name})"
+          done
+          if [ -n "$movies" ]; then
+            movies="
 
-          Built from \`${SHA:0:7}\`. This link is updated on every push to this pull request."
+          **Movies:**${movies}"
+          fi
+          body="<!-- pdf-preview -->
+          **Article preview:** [esis-jet.pdf](${base}/esis-jet.pdf)${movies}
+
+          Built from \`${SHA:0:7}\`. These links are updated on every push to this pull request."
 
           # Update the existing comment in place so pushes do not pile up comments.
           id=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \

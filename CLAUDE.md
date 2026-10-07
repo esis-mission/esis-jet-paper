@@ -78,6 +78,29 @@ keywords, each section, the acknowledgments, and finally the bibliography
 - **`_preamble.py`** — custom commands, including a colored comment macro per
   author (`\roy`, `\charles`, `\jake`, `\dana`).
 
+## Movies
+
+No PDF reader plays a movie, and neither does arXiv's HTML version of an article,
+so before publication the movies of animated figures can only be watched where we
+publish them. Give the figure an `aastex.Animation` (needs `aastex>=0.8`) whose
+`url` is `esis_jet_paper.url("<movie>.mp4")`:
+
+```python
+figure = aastex.FigureStar(
+    "eventE",
+    animation=aastex.Animation(movie, url=esis_jet_paper.url(movie.name)),
+)
+```
+
+`aastex` wraps the stills in AASTeX's `interactive` environment, links the movie
+from the caption, and copies it beside the PDF. CI publishes every `.mp4` beside
+`esis-jet.pdf` on GitHub Pages, at the root for `main` and under `pr/<number>/`
+for a pull request; `ESIS_JET_PAPER_URL`, set by the `tests` workflow, makes the
+captions of a pull request link to its own preview. The AAS journals want the
+caption to describe what the animation shows and how long it runs, not only that
+it exists, and `generate_archive()` packs each movie as `figNNanim.zip` for
+submission.
+
 ## Conventions
 
 - Every module declares an explicit `__all__` and exposes functionality through small
