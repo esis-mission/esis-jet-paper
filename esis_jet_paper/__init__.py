@@ -9,6 +9,7 @@ from ._authors import authors
 from ._document import document, pdf
 from ._keywords import keywords
 from ._preamble import preamble
+from ._url import url
 from ._variables import variables
 
 __all__ = [
@@ -22,5 +23,6 @@ __all__ = [
     "preamble",
     "sections",
     "tables",
+    "url",
     "variables",
 ]

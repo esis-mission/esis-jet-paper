@@ -84,6 +84,10 @@ article to the link above, and pull requests get their own preview at
 `…/pr/<number>/esis-jet.pdf`, linked in a comment on the pull request and
 removed when it closes.
 
+The movies of animated figures are published beside the article, since no PDF
+reader can play them, and the caption of each animated figure links to its movie.
+The journal plays them in the online version once the article is published.
+
 ## Commenting on the draft
 
 Each author has a colored comment macro for notes in the prose:

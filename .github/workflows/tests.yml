@@ -38,6 +38,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e .[test]
       - name: Test with pytest
+        env:
+          # Where the `pdf` workflow will publish this build: the root of the
+          # site for `main`, and `pr/<number>/` for a pull request. The
+          # captions of animated figures link to their movies there.
+          ESIS_JET_PAPER_URL: >-
+            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${{ github.event_name == 'pull_request' && format('pr/{0}/', github.event.number) || '' }}
         run: |
           pip install pytest-cov
           pytest --cov=. --cov-report=xml
@@ -46,7 +52,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: article
-          path: esis_jet_paper/esis-jet.pdf
+          # The movies of the animated figures, which `aastex` copies beside
+          # the pdf, are published with it.
+          path: |
+            esis_jet_paper/esis-jet.pdf
+            esis_jet_paper/*.mp4
           if-no-files-found: error
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
