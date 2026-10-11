@@ -95,7 +95,7 @@ def _draw(
         position,
         C=np.where(missing, 1, np.nan),
         ax=axs[0],
-        cmap=matplotlib.colors.ListedColormap(["gray"]),
+        cmap=matplotlib.colors.ListedColormap(["white"]),
         rasterized=True,
     )
     na.plt.pcolormesh(
@@ -160,7 +160,7 @@ visible spectrum, from violet for the coolest plasma to red for the hottest (rig
 Every temperature and every frame shares one linear scale, up to the
 \demMoviePercentile th percentile of the whole movie, so the brightness of a pixel is how
 much plasma it has and its color is at what temperature.
-Gray pixels are those where \XRT\ saturated, which have no \DEM.
+White pixels are those where \XRT\ saturated, which have no \DEM.
 The animation shows the \DEM\ for each of the \demMovieFrames\ \XRT\ images which began
 from \demMovieStart\ to \demMovieStop~UT, at \demMovieFps\ frames per second, and runs
 for \demMovieDuration.
