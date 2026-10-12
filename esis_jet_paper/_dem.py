@@ -200,7 +200,11 @@ def dem() -> Inversion:
         variance=True,
         axis_filter="channel",
     )[_temperature_xrt]
-    noise_photon = (variance_xrt.outputs / response_xrt.outputs)[_temperature_noise]
+    # One factor, without the axis the response of XRT shares with AIA,
+    # so that the ratio of the noise is one number.
+    noise_photon = (variance_xrt.outputs / response_xrt.outputs)[
+        _temperature_noise | {"channel": 0}
+    ]
 
     in_box = na.ScalarArray.zeros(images_xrt.outputs[{"time": 0}].shape) > 0
     in_box[_box] = True
