@@ -16,8 +16,11 @@ __all__ = [
     "dem",
 ]
 
-_box = {"detector_x": slice(172, 300), "detector_y": slice(80, 208)}
-"""The 128 by 128 pixels of XRT around event E, as in the DEM tutorial of hinode."""
+_box = {"detector_x": slice(172, 300), "detector_y": slice(105, 233)}
+"""
+The 128 by 128 pixels of XRT around event E, centered between its base and
+its northern footpoint, which the box of the DEM tutorial of hinode cuts off.
+"""
 
 _fwhm_xrt = 2 * u.arcsec
 """The width at half maximum of the core of the point-spread function of XRT."""
