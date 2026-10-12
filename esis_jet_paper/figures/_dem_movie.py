@@ -46,10 +46,39 @@ def index_still() -> int:
     return int(np.argmin(np.abs((time - time_still).to(u.s))))
 
 
-def _shown() -> tuple[na.AbstractScalar, na.AbstractScalar, float]:
+def _field() -> tuple[tuple[float, float], tuple[float, float]]:
+    """
+    The helioprojective :math:`x` and :math:`y` limits, in arcseconds, of the
+    field that every frame fills.
+
+    Each XRT image points a little differently, so a frame drawn to its own
+    limits would carry that jitter onto the Sun, and its slightly rolled edges
+    would leave slivers of the background showing.
+    """
+    position = esis_jet_paper.dem().position
+    x = position.x.to(u.arcsec)
+    y = position.y.to(u.arcsec)
+    xlim = (
+        float(x[{"detector_x": 0}].max().ndarray.value),
+        float(x[{"detector_x": -1}].min().ndarray.value),
+    )
+    ylim = (
+        float(y[{"detector_y": 0}].max().ndarray.value),
+        float(y[{"detector_y": -1}].min().ndarray.value),
+    )
+    return xlim, ylim
+
+
+def _shown() -> tuple[
+    na.AbstractScalar,
+    na.AbstractScalar,
+    float,
+    tuple[tuple[float, float], tuple[float, float]],
+]:
     """
     The log T of each temperature shown, the DEM there in units of
-    :data:`_scale`, and the value at which the brightness saturates.
+    :data:`_scale`, the value at which the brightness saturates, and the
+    limits of the field shown, from :func:`_field`.
     """
     inversion = esis_jet_paper.dem()
     logt = np.log10(inversion.dem.inputs / u.K)
@@ -58,7 +87,7 @@ def _shown() -> tuple[na.AbstractScalar, na.AbstractScalar, float]:
     dem = (inversion.dem.outputs / _scale).to(u.dimensionless_unscaled)
     dem = dem[index]
     vmax = float(np.nanpercentile(dem.ndarray, percentile))
-    return logt[index], dem, vmax
+    return logt[index], dem, vmax, _field()
 
 
 def _draw(
@@ -67,6 +96,7 @@ def _draw(
     logt: na.AbstractScalar,
     dem: na.AbstractScalar,
     vmax: float,
+    field: tuple[tuple[float, float], tuple[float, float]],
 ) -> None:
     """
     Draw the false-color DEM of frame `i` on the image and colorbar axes,
@@ -107,6 +137,8 @@ def _draw(
 
     time = inversion.time[i].strftime("%H:%M:%S")
     axs[0].set_title(f"{time} UT")
+    axs[0].set_xlim(field[0])
+    axs[0].set_ylim(field[1])
     axs[0].set_aspect("equal")
     axs[0].set_xlabel("helioprojective $x$ (arcsec)")
     axs[0].set_ylabel("helioprojective $y$ (arcsec)")
@@ -142,6 +174,10 @@ def dem_movie() -> aastex.Figure:
             extra_args=["-pix_fmt", "yuv420p"],
         )
         with writer.saving(fig, movie, dpi=300):
+            # Constrained layout settles on the second draw of axes with a
+            # fixed aspect, so draw once before the first frame is recorded.
+            _draw(axs, 0, *shown)
+            fig.canvas.draw()
             for i in range(inversion.time.size):
                 _draw(axs, i, *shown)
                 writer.grab_frame()
