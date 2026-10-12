@@ -30,8 +30,11 @@ fps = 4
 temperature_min = 5.6
 """The lowest log T shown, below which the DEM rests on AIA 335 alone."""
 
-temperature_max = 7.2
-"""The highest log T shown, above which no channel constrains the DEM."""
+temperature_max = 6.5
+"""
+The highest log T shown, above which lies only about 3% of the emission
+measure of the movie, so that the colors spread over the plasma there is.
+"""
 
 _scale = 1e27 / u.cm**5
 """The unit the DEM is shown in, so that the colorbar needs no offset."""
