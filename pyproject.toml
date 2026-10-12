@@ -18,7 +18,7 @@ dependencies = [
     "aastex~=0.9",
     "matplotlib",
     "named-arrays~=2.14",
-    "solar-dynamics-observatory~=1.3",
+    "solar-dynamics-observatory~=1.2",
     "hinode~=0.3",
     "utu~=0.3",
 ]
