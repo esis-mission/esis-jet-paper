@@ -11,6 +11,7 @@ from ._dem import Inversion, dem
 from ._document import document, pdf
 from ._keywords import keywords
 from ._preamble import preamble
+from ._style import rc
 from ._url import url
 from ._variables import variables
 
@@ -29,6 +30,7 @@ __all__ = [
     "keywords",
     "pdf",
     "preamble",
+    "rc",
     "sections",
     "tables",
     "url",

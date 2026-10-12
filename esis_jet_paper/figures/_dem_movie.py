@@ -124,26 +124,29 @@ def dem_movie() -> aastex.Figure:
     inversion = esis_jet_paper.dem()
     shown = _shown()
 
-    fig, axs = plt.subplots(
-        ncols=2,
-        figsize=(aastex.column_width_inches, 0.85 * aastex.column_width_inches),
-        gridspec_kw={"width_ratios": [0.88, 0.12]},
-        constrained_layout=True,
-    )
+    # The movie is drawn in the same fonts as the still, even when it is
+    # made outside of :func:`esis_jet_paper.document`.
+    with plt.rc_context(esis_jet_paper.rc):
+        fig, axs = plt.subplots(
+            ncols=2,
+            figsize=(aastex.column_width_inches, 0.85 * aastex.column_width_inches),
+            gridspec_kw={"width_ratios": [0.88, 0.12]},
+            constrained_layout=True,
+        )
 
-    # Beside the PDF, where `aastex` would otherwise copy it.
-    movie = pathlib.Path(esis_jet_paper.__file__).parent / "dem-event-e.mp4"
-    writer = matplotlib.animation.FFMpegWriter(
-        fps=fps,
-        codec="h264",
-        extra_args=["-pix_fmt", "yuv420p"],
-    )
-    with writer.saving(fig, movie, dpi=300):
-        for i in range(inversion.time.size):
-            _draw(axs, i, *shown)
-            writer.grab_frame()
+        # Beside the PDF, where `aastex` would otherwise copy it.
+        movie = pathlib.Path(esis_jet_paper.__file__).parent / "dem-event-e.mp4"
+        writer = matplotlib.animation.FFMpegWriter(
+            fps=fps,
+            codec="h264",
+            extra_args=["-pix_fmt", "yuv420p"],
+        )
+        with writer.saving(fig, movie, dpi=300):
+            for i in range(inversion.time.size):
+                _draw(axs, i, *shown)
+                writer.grab_frame()
 
-    _draw(axs, index_still(), *shown)
+        _draw(axs, index_still(), *shown)
 
     result = aastex.Figure(
         "fig:demMovie",

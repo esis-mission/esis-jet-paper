@@ -16,10 +16,7 @@ def document() -> aastex.Document:
     An :mod:`aastex` representation of the article.
     """
 
-    plt.rcParams["text.usetex"] = True
-    plt.rcParams["font.family"] = "serif"
-    plt.rcParams["font.size"] = 9
-    plt.rcParams["lines.linewidth"] = 1
+    plt.rcParams.update(esis_jet_paper.rc)
 
     doc = aastex.Document(
         document_options=[
