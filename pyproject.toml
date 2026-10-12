@@ -15,7 +15,7 @@ classifiers = [
 ]
 dependencies = [
     "pylatex~=1.4",
-    "aastex~=0.9",
+    "aastex~=0.9.1",
     "matplotlib",
     "named-arrays~=2.14",
     "solar-dynamics-observatory~=1.2",

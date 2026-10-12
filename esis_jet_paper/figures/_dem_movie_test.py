@@ -15,7 +15,7 @@ def test_dem_movie():
     assert animation.source.is_file()
     assert animation.source.stat().st_size < 15e6
     assert animation.url == esis_jet_paper.url("dem-event-e.mp4")
-    assert "watched at" in figure.dumps()
+    assert "watched online" in figure.dumps()
 
 
 def test_field():
