@@ -14,6 +14,7 @@ def acronyms() -> list[aastex.Acronym]:
         aastex.Acronym("MOSES", "the Multi-Order Solar EUV Spectrograph"),
         aastex.Acronym("AIA", "the Atmospheric Imaging Assembly"),
         aastex.Acronym("HMI", "the Helioseismic and Magnetic Imager"),
+        aastex.Acronym("EVE", "the EUV Variability Experiment"),
         aastex.Acronym("XRT", "the X-Ray Telescope"),
         aastex.Acronym("IRIS", "the Interface Region Imaging Spectrograph"),
         aastex.Acronym("HRTS", "High Resolution Telescope and Spectrograph"),

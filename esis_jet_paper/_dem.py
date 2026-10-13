@@ -14,6 +14,7 @@ import esis_jet_paper
 __all__ = [
     "Inversion",
     "dem",
+    "temperature_response",
 ]
 
 _box = {"detector_x": slice(172, 300), "detector_y": slice(105, 233)}
@@ -172,6 +173,51 @@ def _stack(aia: na.AbstractScalar, xrt: na.AbstractScalar) -> na.AbstractScalar:
 
 
 @functools.cache
+def temperature_response() -> na.FunctionArray:
+    """
+    The temperature response of each channel from which the DEM of event E
+    is inverted, per steradian, from log T = 5.0 to 7.5: the EUV channels of
+    AIA in :data:`esis_jet_paper.channels` and then XRT Al_poly, along
+    ``channel``.
+
+    The response of AIA is that of SolarSoft at the time of the first AIA
+    image, normalized to EVE and with the empirical correction for the
+    emission CHIANTI is missing.
+    The response of XRT is that of xrtpy, with the contamination on the date
+    of the first XRT image.
+    """
+    images_xrt = esis_jet_paper.xrt()
+    images_aia = esis_jet_paper.aia()
+
+    response_aia = sdo.aia.temperature_response(
+        wavelength=esis_jet_paper.channels,
+        time=images_aia.inputs.time.ndarray.min(),
+        eve=True,
+        chiantifix=True,
+    )[_temperature_aia]
+    response_xrt = hinode.xrt.temperature_response(
+        filter="Al_poly",
+        time=images_xrt.inputs.time.ndarray[0],
+        axis_filter="channel",
+    )[_temperature_xrt]
+
+    solid_angle_aia = np.square(_plate_scale_aia).to(u.sr)
+    # The plate scale of XRT is the same in every image.
+    cdelt = images_xrt.inputs.cdelt.position[{"time": 0}]
+    solid_angle_xrt = (cdelt.x * cdelt.y).to(u.sr)
+
+    outputs_aia = response_aia.outputs / (solid_angle_aia / u.pix)
+    outputs_xrt = response_xrt.outputs / (solid_angle_xrt / u.pix)
+    return na.FunctionArray(
+        inputs=response_aia.inputs,
+        outputs=np.concatenate(
+            [outputs_aia.to(_unit_response), outputs_xrt.to(_unit_response)],
+            axis="channel",
+        ),
+    )
+
+
+@functools.cache
 def dem() -> Inversion:
     """
     The DEM of event E from AIA and XRT for every Al_poly image of XRT from
@@ -211,14 +257,7 @@ def dem() -> Inversion:
     ratio_noise = images_xrt.ratio_noise(noise_photon, where=~in_box)
 
     time_aia = images_aia.inputs.time.ndarray
-    response_aia = sdo.aia.temperature_response(
-        wavelength=esis_jet_paper.channels,
-        time=time_aia.min(),
-        eve=True,
-        chiantifix=True,
-    )[_temperature_aia]
-    solid_angle_aia = np.square(_plate_scale_aia).to(u.sr)
-    outputs_aia = (response_aia.outputs / (solid_angle_aia / u.pix)).to(_unit_response)
+    response = temperature_response()
 
     position = []
     dems = []
@@ -258,15 +297,6 @@ def dem() -> Inversion:
         intensity_xrt = intensity_xrt / solid_angle_xrt
         uncertainty_xrt = xrt.uncertainty(noise_photon) / solid_angle_xrt
         uncertainty_xrt = np.sqrt(ratio_noise) * uncertainty_xrt
-
-        outputs_xrt = response_xrt.outputs / (solid_angle_xrt / u.pix)
-        response = na.FunctionArray(
-            inputs=response_aia.inputs,
-            outputs=np.concatenate(
-                [outputs_aia, outputs_xrt.to(_unit_response)],
-                axis="channel",
-            ),
-        )
 
         d, c = utu.dem.plowman(
             intensity=_stack(intensity_aia, intensity_xrt),
