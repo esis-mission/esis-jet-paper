@@ -11,9 +11,14 @@ __all__ = [
 ]
 
 
-def document() -> aastex.Document:
+def document(linenumbers: bool = True) -> aastex.Document:
     """
     An :mod:`aastex` representation of the article.
+
+    Parameters
+    ----------
+    linenumbers
+        Whether to number the lines, as the journal requires for review.
     """
 
     plt.rcParams.update(esis_jet_paper.rc)
@@ -24,6 +29,7 @@ def document() -> aastex.Document:
         ],
         lmodern=False,
         textcomp=False,
+        linenumbers=linenumbers,
     )
 
     doc.packages.append(aastex.Package("amsmath"))
@@ -60,12 +66,17 @@ def document() -> aastex.Document:
     return doc
 
 
-def pdf() -> pathlib.Path:
+def pdf(linenumbers: bool = True) -> pathlib.Path:
     """
     Build a pdf version of :func:`document` and return the path of the document.
+
+    Parameters
+    ----------
+    linenumbers
+        Whether to number the lines, as the journal requires for review.
     """
 
-    doc = document()
+    doc = document(linenumbers=linenumbers)
 
     path = pathlib.Path(__file__).parent / "esis-jet"
     doc.generate_pdf(

@@ -7,8 +7,9 @@ import esis_jet_paper
 
 
 def test_document():
-    doc = esis_jet_paper.document()
+    doc = esis_jet_paper.document(linenumbers=False)
     assert isinstance(doc, pylatex.Document)
+    assert "linenumbers" not in doc.documentclass.dumps()
 
 
 def test_pdf(capsys):
@@ -16,6 +17,9 @@ def test_pdf(capsys):
         pdf = esis_jet_paper.pdf()
     assert isinstance(pdf, pathlib.Path)
     assert pdf.exists()
+
+    tex = pdf.with_suffix(".tex").read_text(encoding="utf-8")
+    assert r"\documentclass[twocolumn,linenumbers]{aastex701}" in tex
 
     with pymupdf.open(pdf) as document:
         text = "".join(page.get_text() for page in document)
