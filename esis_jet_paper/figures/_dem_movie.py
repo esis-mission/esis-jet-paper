@@ -109,12 +109,14 @@ def _shown() -> tuple[
 def _curves() -> tuple[
     na.AbstractScalar,
     dict[str, na.AbstractScalar],
+    na.AbstractScalar,
     tuple[float, float],
 ]:
     """
     The log T of every temperature of the inversion, the DEM in units of
     :data:`_scale` of the pixel nearest each of :data:`points` in every frame,
-    and limits of the DEM which hold every frame.
+    the median DEM of the pixels inside the field of :func:`_field` in every
+    frame, and limits of the DEM which hold every frame.
 
     The pixel is found again in each frame, since each XRT image points a
     little differently.
@@ -139,10 +141,19 @@ def _curves() -> tuple[
         index = np.argmin(distance, axis=("detector_x", "detector_y"))
         curves[name] = dem[index]
 
+    # The pixels shown in the image, a reference against which event E stands.
+    (xmin, xmax), (ymin, ymax) = _field()
+    inside = (center.x >= xmin * u.arcsec) & (center.x <= xmax * u.arcsec)
+    inside = inside & (center.y >= ymin * u.arcsec) & (center.y <= ymax * u.arcsec)
+    median = np.nanmedian(
+        np.where(inside, dem, np.nan),
+        axis=("detector_x", "detector_y"),
+    )
+
     peak = max(float(np.nanmax(c.ndarray)) for c in curves.values())
     limits = (peak / 1e3, 2 * peak)
 
-    return logt, curves, limits
+    return logt, curves, median, limits
 
 
 def _draw(
@@ -154,6 +165,7 @@ def _draw(
     field: tuple[tuple[float, float], tuple[float, float]],
     logt_all: na.AbstractScalar,
     curves: dict[str, na.AbstractScalar],
+    median: na.AbstractScalar,
     limits: tuple[float, float],
 ) -> None:
     """
@@ -237,6 +249,16 @@ def _draw(
             linestyle=linestyle,
             label=label,
         )
+    # Last in the legend, but beneath the points, above the shading.
+    na.plt.plot(
+        logt_all,
+        median[{"time": i}],
+        axis="temperature",
+        ax=axs[2],
+        color="0.5",
+        label="median",
+        zorder=1.5,
+    )
     axs[2].set_yscale("log")
     axs[2].set_xlim(float(logt_all.min().ndarray), float(logt_all.max().ndarray))
     axs[2].set_ylim(limits)
@@ -300,8 +322,9 @@ Every temperature and every frame shares one linear scale, up to the
 much plasma it has and its color is at what temperature.
 White pixels are those where \XRT\ saturated, which have no \DEM.
 The \DEM\ of the pixel nearest each of the two circled points, the base of event E and
-its northern footpoint, is plotted over every temperature of the inversion (right), with
-the temperatures colored in the image shaded gray.
+its northern footpoint, is plotted over every temperature of the inversion (right),
+against the median \DEM\ of the pixels in the image (gray line), with the temperatures
+colored in the image shaded gray.
 The animation shows the \DEM\ for each of the \demMovieFrames\ \XRT\ images which began
 from \demMovieStart\ to \demMovieStop~UT, at \demMovieFps\ frames per second, and runs
 for \demMovieDuration.
