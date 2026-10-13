@@ -19,6 +19,7 @@ dependencies = [
     "matplotlib",
     "named-arrays~=2.14",
     "solar-dynamics-observatory~=1.2",
+    "sunpy",
     "hinode~=0.3",
     "utu~=0.3",
 ]

@@ -16,7 +16,6 @@ __all__ = [
     "fps",
     "index_still",
     "percentile",
-    "points",
     "temperature_max",
     "temperature_min",
     "time_still",
@@ -42,18 +41,6 @@ _scale = 1e27 / u.cm**5
 
 percentile = 99.5
 """The percentile of the DEM over the whole movie at which the brightness saturates."""
-
-points = {
-    "base": (49, -86),
-    "footpoint": (68, 0),
-}
-"""
-The helioprojective coordinates, in arcseconds, of the points whose DEM is
-plotted beside the image: the base of event E and its northern footpoint.
-"""
-
-_linestyles = ["-", "--"]
-"""The style of the line of each of :data:`points`."""
 
 
 def index_still() -> int:
@@ -114,7 +101,8 @@ def _curves() -> tuple[
 ]:
     """
     The log T of every temperature of the inversion, the DEM in units of
-    :data:`_scale` of the pixel nearest each of :data:`points` in every frame,
+    :data:`_scale` of the pixel nearest each of :data:`esis_jet_paper.points`
+    in every frame,
     the median DEM of the pixels inside the field of :func:`_field` in every
     frame, and limits of the DEM which hold every frame.
 
@@ -135,7 +123,7 @@ def _curves() -> tuple[
     ) / 4
 
     curves = {}
-    for name, (x, y) in points.items():
+    for name, (x, y) in esis_jet_paper.points.items():
         distance = np.square(center.x - x * u.arcsec)
         distance = distance + np.square(center.y - y * u.arcsec)
         index = np.argmin(distance, axis=("detector_x", "detector_y"))
@@ -170,8 +158,9 @@ def _draw(
 ) -> None:
     """
     Draw the false-color DEM of frame `i` on the image and colorbar axes,
-    given what :func:`_shown` returns, and the DEM at each of :data:`points`
-    on the third axes, given what :func:`_curves` returns.
+    given what :func:`_shown` returns, and the DEM at each of
+    :data:`esis_jet_paper.points` on the third axes, given what
+    :func:`_curves` returns.
     """
     inversion = esis_jet_paper.dem()
     position = inversion.position[{"time": i}]
@@ -220,7 +209,7 @@ def _draw(
 
     # The range of temperatures colored in the image.
     axs[2].axvspan(temperature_min, temperature_max, color="0.9", linewidth=0)
-    for (name, (x, y)), linestyle in zip(points.items(), _linestyles):
+    for name, (x, y) in esis_jet_paper.points.items():
         axs[0].plot(
             x,
             y,
@@ -246,7 +235,7 @@ def _draw(
             axis="temperature",
             ax=axs[2],
             color="black",
-            linestyle=linestyle,
+            linestyle=esis_jet_paper.linestyles[name],
             label=label,
         )
     # Last in the legend, but beneath the points, above the shading.

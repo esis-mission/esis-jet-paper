@@ -45,6 +45,17 @@ def _dem_movie() -> list[aastex.Variable]:
     ]
 
 
+def _light_curves() -> list[aastex.Variable]:
+    """The numbers in the caption of :func:`esis_jet_paper.figures.light_curves`."""
+    figure = esis_jet_paper.figures._light_curves
+    start, stop = figure.window()
+    return [
+        aastex.Variable("lightCurvesStart", start.strftime("%H:%M:%S")),
+        aastex.Variable("lightCurvesStop", stop.strftime("%H:%M:%S")),
+        aastex.Variable("lightCurvesRadius", figure.radius),
+    ]
+
+
 def variables() -> list[aastex.Variable]:
     """
     A list of LaTeX variables for every numeric quantity cited in the prose.
@@ -52,10 +63,14 @@ def variables() -> list[aastex.Variable]:
     Reference these macros in section strings instead of hardcoding numbers so
     that the text stays in sync with the analysis.
     """
-    return [
-        _pending("eventDuration"),
-        _pending("eventLength"),
-        _pending("velocityBlue"),
-        _pending("velocityRed"),
-        _pending("temperaturePeak"),
-    ] + _dem_movie()
+    return (
+        [
+            _pending("eventDuration"),
+            _pending("eventLength"),
+            _pending("velocityBlue"),
+            _pending("velocityRed"),
+            _pending("temperaturePeak"),
+        ]
+        + _dem_movie()
+        + _light_curves()
+    )

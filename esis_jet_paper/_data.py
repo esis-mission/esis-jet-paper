@@ -14,6 +14,7 @@ import sdo
 
 __all__ = [
     "aia",
+    "aia_304",
     "archive",
     "channels",
     "directory_default",
@@ -124,10 +125,9 @@ def xrt() -> hinode.xrt.Filtergram:
     return result.remove_leak()
 
 
-@functools.cache
-def aia() -> sdo.aia.Filtergram:
+def _aia(wavelength: na.ScalarArray) -> sdo.aia.Filtergram:
     """
-    The registered images of the :data:`channels` of AIA in every 12 second
+    The registered images of the given channels of AIA in every 12 second
     slot from 17:59:36 to 18:20:36 UT, cut out around event E,
     along the axes ``time`` and ``channel``.
     """
@@ -138,10 +138,30 @@ def aia() -> sdo.aia.Filtergram:
         _, slot, channel = row["record"].replace("]", "").split("[")
         files[slot, int(channel)] = str(directory / row["file"])
     slots = sorted({slot for slot, _ in files})
-    paths = [[files[s, int(c)] for c in channels.ndarray.value] for s in slots]
+    paths = [[files[s, int(c)] for c in wavelength.ndarray.value] for s in slots]
     return sdo.aia.Filtergram.from_fits(
         path=na.ScalarArray(np.array(paths, dtype=object), axes=("time", "channel")),
-        wavelength=channels,
+        wavelength=wavelength,
         axis_time="time",
         axis_wavelength="channel",
     )
+
+
+@functools.cache
+def aia() -> sdo.aia.Filtergram:
+    """
+    The registered images of the :data:`channels` of AIA in every 12 second
+    slot from 17:59:36 to 18:20:36 UT, cut out around event E,
+    along the axes ``time`` and ``channel``.
+    """
+    return _aia(channels)
+
+
+@functools.cache
+def aia_304() -> sdo.aia.Filtergram:
+    """
+    The registered images of the 304 angstrom channel of AIA, which the
+    differential emission measure leaves out since He II is optically thick,
+    like :func:`aia` along the axes ``time`` and ``channel``.
+    """
+    return _aia(na.ScalarArray([304] * u.AA, axes="channel"))
