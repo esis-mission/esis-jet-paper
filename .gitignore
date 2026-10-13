@@ -38,6 +38,7 @@ docs/_autosummary/
 esis_jet_paper/esis-jet.tex
 esis_jet_paper/*.pdf
 esis_jet_paper/*.png
+esis_jet_paper/*.mp4
 
 # The AASTeX class, bibliography style, and ORCID logo, which aastex copies
 # next to the .tex file at build time and leaves there when the .tex is kept.

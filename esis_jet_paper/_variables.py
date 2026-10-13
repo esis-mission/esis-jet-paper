@@ -1,4 +1,7 @@
 import aastex
+import astropy.units as u
+
+import esis_jet_paper
 
 __all__ = [
     "variables",
@@ -19,6 +22,29 @@ def _pending(name: str) -> aastex.Variable:
     return aastex.Variable(name=name, value=aastex.NoEscape(r"\textbf{XX}"))
 
 
+def _dem_movie() -> list[aastex.Variable]:
+    """The numbers in the caption of :func:`esis_jet_paper.figures.dem_movie`."""
+    figure = esis_jet_paper.figures._dem_movie
+
+    time = esis_jet_paper.dem().time
+    num = time.size
+
+    def clock(i: int) -> str:
+        return time[i].strftime("%H:%M:%S")
+
+    return [
+        aastex.Variable("demMovieFrames", num),
+        aastex.Variable("demMovieStart", clock(0)),
+        aastex.Variable("demMovieStop", clock(num - 1)),
+        aastex.Variable("demMovieStill", clock(figure.index_still())),
+        aastex.Variable("demMovieFps", figure.fps),
+        aastex.Variable("demMovieDuration", round(num / figure.fps) * u.s),
+        aastex.Variable("demMovieTemperatureMin", figure.temperature_min),
+        aastex.Variable("demMovieTemperatureMax", figure.temperature_max),
+        aastex.Variable("demMoviePercentile", figure.percentile),
+    ]
+
+
 def variables() -> list[aastex.Variable]:
     """
     A list of LaTeX variables for every numeric quantity cited in the prose.
@@ -32,4 +58,4 @@ def variables() -> list[aastex.Variable]:
         _pending("velocityBlue"),
         _pending("velocityRed"),
         _pending("temperaturePeak"),
-    ]
+    ] + _dem_movie()

@@ -18,7 +18,7 @@ jobs:
         python-version: ["3.12", "3.13"]
     name: ${{ matrix.os }}, Python ${{ matrix.python-version }} test
     steps:
-      - name: Install LaTeX
+      - name: Install LaTeX, and ffmpeg for the movies
         # `apt-get` waits forever if another process on the runner holds the
         # dpkg lock, so bound that wait and answer its prompts non-interactively.
         # The index the runner ships with goes stale, and installing against a
@@ -27,7 +27,7 @@ jobs:
           sudo apt-get update -o DPkg::Lock::Timeout=300 &&
           sudo apt-get install -y -o DPkg::Lock::Timeout=300
           texlive-publishers texlive-science cm-super latexmk libcairo2-dev
-          dvipng
+          dvipng ffmpeg
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5

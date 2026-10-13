@@ -1,5 +1,7 @@
 import aastex
 
+import esis_jet_paper
+
 __all__ = [
     "temperature",
 ]
@@ -32,7 +34,13 @@ def temperature() -> aastex.Section:
     (\temperaturePeak), and whether the event has a coronal component visible to \XRT\ or is
     confined to the \TR, the question raised by \citet{Teriaca2002}.
     Whether the temperature differs between the cusp and the footpoint of the inverted Y.
+\item \textbf{Evolution.}
+    The \DEM\ of event E from \AIA\ and \XRT\ for every \XRT\ image from \demMovieStart\ to
+    \demMovieStop~UT (Figure~\ref{fig:demMovie}), inverted as in the \DEM\ tutorial of the
+    \texttt{hinode} package, at the full resolution of \XRT.
 \item \textbf{Figures:} the temperature responses of the three instruments;
-    the \DEMs\ of event E and of the background.
+    the \DEMs\ of event E and of the background;
+    the \DEM\ of event E through its lifetime (Figure~\ref{fig:demMovie}).
 \end{outline}""")
+    result.append(esis_jet_paper.figures.dem_movie())
     return result
