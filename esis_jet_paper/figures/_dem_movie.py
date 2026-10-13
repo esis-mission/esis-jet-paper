@@ -16,6 +16,7 @@ __all__ = [
     "fps",
     "index_still",
     "percentile",
+    "points",
     "temperature_max",
     "temperature_min",
     "time_still",
@@ -41,6 +42,18 @@ _scale = 1e27 / u.cm**5
 
 percentile = 99.5
 """The percentile of the DEM over the whole movie at which the brightness saturates."""
+
+points = {
+    "base": (49, -86),
+    "footpoint": (68, 0),
+}
+"""
+The helioprojective coordinates, in arcseconds, of the points whose DEM is
+plotted beside the image: the base of event E and its northern footpoint.
+"""
+
+_linestyles = ["-", "--"]
+"""The style of the line of each of :data:`points`."""
 
 
 def index_still() -> int:
@@ -93,6 +106,45 @@ def _shown() -> tuple[
     return logt[index], dem, vmax, _field()
 
 
+def _curves() -> tuple[
+    na.AbstractScalar,
+    dict[str, na.AbstractScalar],
+    tuple[float, float],
+]:
+    """
+    The log T of every temperature of the inversion, the DEM in units of
+    :data:`_scale` of the pixel nearest each of :data:`points` in every frame,
+    and limits of the DEM which hold every frame.
+
+    The pixel is found again in each frame, since each XRT image points a
+    little differently.
+    """
+    inversion = esis_jet_paper.dem()
+    logt = np.log10(inversion.dem.inputs / u.K)
+    dem = (inversion.dem.outputs / _scale).to(u.dimensionless_unscaled)
+
+    position = inversion.position.to(u.arcsec)
+    lo, hi = slice(None, -1), slice(1, None)
+    center = (
+        position[{"detector_x": lo, "detector_y": lo}]
+        + position[{"detector_x": hi, "detector_y": lo}]
+        + position[{"detector_x": lo, "detector_y": hi}]
+        + position[{"detector_x": hi, "detector_y": hi}]
+    ) / 4
+
+    curves = {}
+    for name, (x, y) in points.items():
+        distance = np.square(center.x - x * u.arcsec)
+        distance = distance + np.square(center.y - y * u.arcsec)
+        index = np.argmin(distance, axis=("detector_x", "detector_y"))
+        curves[name] = dem[index]
+
+    peak = max(float(np.nanmax(c.ndarray)) for c in curves.values())
+    limits = (peak / 1e3, 2 * peak)
+
+    return logt, curves, limits
+
+
 def _draw(
     axs: np.ndarray,
     i: int,
@@ -100,10 +152,14 @@ def _draw(
     dem: na.AbstractScalar,
     vmax: float,
     field: tuple[tuple[float, float], tuple[float, float]],
+    logt_all: na.AbstractScalar,
+    curves: dict[str, na.AbstractScalar],
+    limits: tuple[float, float],
 ) -> None:
     """
     Draw the false-color DEM of frame `i` on the image and colorbar axes,
-    given what :func:`_shown` returns.
+    given what :func:`_shown` returns, and the DEM at each of :data:`points`
+    on the third axes, given what :func:`_curves` returns.
     """
     inversion = esis_jet_paper.dem()
     position = inversion.position[{"time": i}]
@@ -150,6 +206,46 @@ def _draw(
     axs[1].yaxis.tick_right()
     axs[1].yaxis.set_label_position("right")
 
+    # The range of temperatures colored in the image.
+    axs[2].axvspan(temperature_min, temperature_max, color="0.9", linewidth=0)
+    for (name, (x, y)), linestyle in zip(points.items(), _linestyles):
+        axs[0].plot(
+            x,
+            y,
+            marker="o",
+            markersize=5,
+            markeredgewidth=0.8,
+            markerfacecolor="none",
+            markeredgecolor="white",
+        )
+        axs[0].annotate(
+            name,
+            xy=(x, y),
+            xytext=(6, 4),
+            textcoords="offset points",
+            color="white",
+        )
+        curve = curves[name][{"time": i}]
+        # XRT saturated in this pixel, which left it without a DEM.
+        label = f"{name}, saturated" if np.all(np.isnan(curve.ndarray)) else name
+        na.plt.plot(
+            logt_all,
+            curve,
+            axis="temperature",
+            ax=axs[2],
+            color="black",
+            linestyle=linestyle,
+            label=label,
+        )
+    axs[2].set_yscale("log")
+    axs[2].set_xlim(float(logt_all.min().ndarray), float(logt_all.max().ndarray))
+    axs[2].set_ylim(limits)
+    axs[2].set_xlabel(r"$\log_{10} T$")
+    axs[2].set_ylabel(r"DEM ($10^{27}\,\mathrm{cm^{-5}}$)")
+    axs[2].yaxis.tick_right()
+    axs[2].yaxis.set_label_position("right")
+    axs[2].legend(loc="upper right")
+
 
 def dem_movie() -> aastex.Figure:
     """
@@ -157,15 +253,15 @@ def dem_movie() -> aastex.Figure:
     for every XRT image from 18:00 to 18:20 UT in the movie.
     """
     inversion = esis_jet_paper.dem()
-    shown = _shown()
+    shown = _shown() + _curves()
 
     # The movie is drawn in the same fonts as the still, even when it is
     # made outside of :func:`esis_jet_paper.document`.
     with plt.rc_context(esis_jet_paper.rc):
         fig, axs = plt.subplots(
-            ncols=2,
-            figsize=(aastex.column_width_inches, 0.85 * aastex.column_width_inches),
-            gridspec_kw={"width_ratios": [0.88, 0.12]},
+            ncols=3,
+            figsize=(aastex.text_width_inches, 0.42 * aastex.text_width_inches),
+            gridspec_kw={"width_ratios": [0.46, 0.06, 0.48]},
             constrained_layout=True,
         )
 
@@ -187,22 +283,25 @@ def dem_movie() -> aastex.Figure:
 
         _draw(axs, index_still(), *shown)
 
-    result = aastex.Figure(
+    result = aastex.FigureStar(
         "fig:demMovie",
-        position="!htb",
+        position="t",
         animation=aastex.Animation(movie, url=esis_jet_paper.url(movie.name)),
     )
     result.add_fig(fig, width=None)
     result.add_caption(aastex.NoEscape(r"""
 The \DEM\ of event E from the six \EUV\ channels of \AIA\ and from \XRT\ Al\_poly at
-\demMovieStill~UT, as a false-color image.
+\demMovieStill~UT, as a false-color image (left).
 Each pixel is colored as if the \DEM\ were the spectrum of the light it emits, with
 $\log_{10} T$ from \demMovieTemperatureMin\ to \demMovieTemperatureMax\ mapped onto the
-visible spectrum, from violet for the coolest plasma to red for the hottest (right).
+visible spectrum, from violet for the coolest plasma to red for the hottest (middle).
 Every temperature and every frame shares one linear scale, up to the
 \demMoviePercentile th percentile of the whole movie, so the brightness of a pixel is how
 much plasma it has and its color is at what temperature.
 White pixels are those where \XRT\ saturated, which have no \DEM.
+The \DEM\ of the pixel nearest each of the two circled points, the base of event E and
+its northern footpoint, is plotted over every temperature of the inversion (right), with
+the temperatures colored in the image shaded gray.
 The animation shows the \DEM\ for each of the \demMovieFrames\ \XRT\ images which began
 from \demMovieStart\ to \demMovieStop~UT, at \demMovieFps\ frames per second, and runs
 for \demMovieDuration.
