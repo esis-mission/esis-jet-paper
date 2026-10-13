@@ -149,3 +149,19 @@ def test_dem():
     # the few saturated pixels, whose chi squared is -1, barely move the median
     assert 0.8 < inversion.chi2.median().ndarray < 1.2
     assert 0 < inversion.ratio_noise < 1
+
+
+def test_temperature_response():
+    """
+    The six AIA channels and XRT respond on the temperatures of the DEM, with
+    171 Å peaking near log T = 5.9 and XRT above log T = 6.5.
+    """
+    response = esis_jet_paper.temperature_response()
+    assert response.outputs.shape == {"channel": 7, "temperature": 51}
+    assert np.all(response.outputs > 0)
+    assert np.allclose(response.inputs, esis_jet_paper.dem().dem.inputs)
+
+    logt = np.log10(response.inputs / u.K)
+    peak = logt[np.argmax(response.outputs, axis="temperature")]
+    assert 5.8 < peak[{"channel": 2}] < 6.0
+    assert peak[{"channel": 6}] > 6.5

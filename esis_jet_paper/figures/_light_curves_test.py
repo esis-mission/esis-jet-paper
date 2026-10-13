@@ -13,7 +13,7 @@ def test_light_curves():
     channels = esis_jet_paper.figures._light_curves._channels()
     assert len(channels) == 8
     colors = [color for _, color, _, _, _ in channels]
-    colors.append(esis_jet_paper.figures._light_curves._color_esis)
+    colors.append(esis_jet_paper.color_esis)
     assert len(set(colors)) == len(colors)
 
 

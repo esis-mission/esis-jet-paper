@@ -22,6 +22,8 @@ def temperature() -> aastex.Section:
     The \ESIS\ lines of \OIII, \OIV, and \OV\ extend the coverage of \AIA\ and \XRT\ down into the
     \TR, and \MgX\ overlaps the coolest coronal channels of \AIA.
     \HeI\ and \AIA\ \SI{304}{\angstrom} are optically thick and are left out of the inversion.
+    The \AIA\ and \XRT\ responses the \DEMs\ are inverted from so far are plotted in
+    Figure~\ref{fig:temperatureResponses}.
 \item \textbf{Radiometric calibration.}
     The \ESIS\ intensities are needed in absolute units here, unlike in
     Section~\ref{sec:SpectralInversionandDopplerShifts}; how the channels are cross-calibrated
@@ -38,9 +40,11 @@ def temperature() -> aastex.Section:
     The \DEM\ of event E from \AIA\ and \XRT\ for every \XRT\ image from \demMovieStart\ to
     \demMovieStop~UT (Figure~\ref{fig:demMovie}), inverted as in the \DEM\ tutorial of the
     \texttt{hinode} package, at the full resolution of \XRT.
-\item \textbf{Figures:} the temperature responses of the three instruments;
+\item \textbf{Figures:} the temperature responses of the three instruments
+    (Figure~\ref{fig:temperatureResponses});
     the \DEMs\ of event E and of the background;
     the \DEM\ of event E through its lifetime (Figure~\ref{fig:demMovie}).
 \end{outline}""")
+    result.append(esis_jet_paper.figures.temperature_responses())
     result.append(esis_jet_paper.figures.dem_movie())
     return result

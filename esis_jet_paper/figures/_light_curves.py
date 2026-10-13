@@ -4,13 +4,11 @@ import aastex
 import astropy.time
 import astropy.units as u
 import hinode
-import matplotlib.colors
 import matplotlib.dates
 import matplotlib.pyplot as plt
 import named_arrays as na
 import numpy as np
 import sdo
-import sunpy.visualization.colormaps.color_tables
 
 import esis_jet_paper
 
@@ -30,31 +28,6 @@ _axis = ("detector_x", "detector_y")
 
 _label_esis = r"ESIS O\,\textsc{v}, to come"
 """The label of the line of ESIS, whose data are not ready yet."""
-
-_levels = {
-    94: 0.4,
-    131: 0.55,
-    171: 0.69,
-    193: 0.4,
-    211: 0.25,
-    304: 0.69,
-    335: 0.3,
-}
-"""
-The level of the AIA color table of each channel, keyed by its wavelength in
-angstroms, at which its line takes its color.
-Each is where the table is most colorful, except that 131 Å is lighter and
-335 Å darker, so that the two are not alike.
-"""
-
-_color_xrt = "black"
-"""The color of the line of XRT."""
-
-_color_esis = "#c000c0"
-"""
-The color of the line of ESIS, unlike any of the AIA color tables and unlike
-the gray which the other figures give the median.
-"""
 
 
 def _middle(images: sdo.aia.Filtergram | hinode.xrt.Filtergram) -> na.ScalarArray:
@@ -123,10 +96,7 @@ def _channels() -> list[
                 intensity=image.outputs / image.timedelta,
             )
             label = rf"{wavelength:.0f}\,\AA"
-            table = sunpy.visualization.colormaps.color_tables.aia_color_table(
-                wavelength * u.AA
-            )
-            color = matplotlib.colors.to_hex(table(_levels[round(wavelength)]))
+            color = esis_jet_paper.color_aia(wavelength * u.AA)
             channel = (label, color, _middle(image), curves, median)
             result.append((wavelength, channel))
     result = [channel for _, channel in sorted(result, key=lambda c: c[0])]
@@ -137,7 +107,7 @@ def _channels() -> list[
         intensity=images.outputs,
         saturated=images.saturated,
     )
-    result.append(("XRT", _color_xrt, _middle(images), curves, median))
+    result.append(("XRT", esis_jet_paper.color_xrt, _middle(images), curves, median))
 
     return result
 
@@ -178,7 +148,7 @@ def light_curves() -> aastex.Figure:
                 label=label,
             )
         # Kept for the O V intensity of ESIS, whose data are not ready yet.
-        ax.plot([], [], color=_color_esis, label=_label_esis)
+        ax.plot([], [], color=esis_jet_paper.color_esis, label=_label_esis)
         ax.set_title(name)
         ax.set_ylim(bottom=0)
         ax.set_ylabel("intensity over median")

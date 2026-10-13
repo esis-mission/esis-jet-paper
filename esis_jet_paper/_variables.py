@@ -56,6 +56,18 @@ def _light_curves() -> list[aastex.Variable]:
     ]
 
 
+def _temperature_responses() -> list[aastex.Variable]:
+    """
+    The numbers in the caption of
+    :func:`esis_jet_paper.figures.temperature_responses`.
+    """
+    figure = esis_jet_paper.figures._temperature_responses
+    return [
+        aastex.Variable("temperatureResponsesMin", f"{figure.temperature_min():.1f}"),
+        aastex.Variable("temperatureResponsesMax", f"{figure.temperature_max():.1f}"),
+    ]
+
+
 def variables() -> list[aastex.Variable]:
     """
     A list of LaTeX variables for every numeric quantity cited in the prose.
@@ -73,4 +85,5 @@ def variables() -> list[aastex.Variable]:
         ]
         + _dem_movie()
         + _light_curves()
+        + _temperature_responses()
     )
