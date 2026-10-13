@@ -53,10 +53,13 @@ jobs:
         with:
           name: article
           # The movies of the animated figures, which `aastex` copies beside
-          # the pdf, are published with it.
+          # the pdf, are published with it, and so are its formatted
+          # bibliography and the BibTeX files it was formatted from.
           path: |
             esis_jet_paper/esis-jet.pdf
             esis_jet_paper/*.mp4
+            esis_jet_paper/esis-jet.bbl
+            esis_jet_paper/*.bib
           if-no-files-found: error
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
