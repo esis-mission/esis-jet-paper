@@ -12,6 +12,14 @@ Barnes, G., Longcope, D.~W., \& Leka, K.~D. 2005, \bibinfo{title}{Implementing
   \dodoi{10.1086/431175}
 
 % type= article
+\bibitem[{P. Boerner {et~al.}(2012)Boerner, Edwards, Lemen, Rausch, Schrijver,
+  Shine, Shing, Stern, Tarbell, Title, Wolfson, Soufli, Spiller, Gullikson,
+  McKenzie, Windt, Golub, Podgorski, Testa, \& Weber}]{Boerner2012}
+Boerner, P., Edwards, C., Lemen, J., {et~al.} 2012, \bibinfo{title}{Initial
+  Calibration of the Atmospheric Imaging Assembly ({AIA}) on the Solar Dynamics
+  Observatory ({SDO}),} \solphys, 275, 41, \dodoi{10.1007/s11207-011-9804-8}
+
+% type= article
 \bibitem[{G.~E. Brueckner \& J.-D.~F. Bartoe(1983)Brueckner \&
   Bartoe}]{Brueckner1983}
 Brueckner, G.~E., \& Bartoe, J.-D.~F. 1983, \bibinfo{title}{Observations of
@@ -182,6 +190,15 @@ Muglach, K. 2008, \bibinfo{title}{Explosive Events and the Evolution of the
   Photospheric Magnetic Field,} \apj, 687, 1398, \dodoi{10.1086/592065}
 
 % type= article
+\bibitem[{N. Narukage {et~al.}(2011)Narukage, Sakao, Kano, Hara, Shimojo,
+  Bando, Urayama, DeLuca, Golub, Weber, Grigis, Cirtain, \&
+  Tsuneta}]{Narukage2011}
+Narukage, N., Sakao, T., Kano, R., {et~al.} 2011,
+  \bibinfo{title}{Coronal-Temperature-Diagnostic Capability of the
+  {Hinode}/{X-Ray} {Telescope} Based on Self-Consistent Calibration,} \solphys,
+  269, 169, \dodoi{10.1007/s11207-010-9685-2}
+
+% type= article
 \bibitem[{T. Okamoto \& I. Yamaguchi(1991)Okamoto \& Yamaguchi}]{Okamoto1991}
 Okamoto, T., \& Yamaguchi, I. 1991, \bibinfo{title}{Simultaneous acquisition of
   spectral image information,} Optics Letters, 16, 1277,
@@ -286,6 +303,16 @@ Tian, H., DeLuca, E.~E., Cranmer, S.~R., {et~al.} 2014,
   \bibinfo{title}{Prevalence of small-scale jets from the networks of the solar
   transition region and chromosphere,} Science, 346,
   \dodoi{10.1126/science.1255711}
+
+% type= article
+\bibitem[{T.~N. Woods {et~al.}(2012)Woods, Eparvier, Hock, Jones, Woodraska,
+  Judge, Didkovsky, Lean, Mariska, Warren, McMullin, Chamberlin, Berthiaume,
+  Bailey, Fuller-Rowell, Sojka, Tobiska, \& Viereck}]{Woods2012}
+Woods, T.~N., Eparvier, F.~G., Hock, R., {et~al.} 2012, \bibinfo{title}{Extreme
+  Ultraviolet Variability Experiment ({EVE}) on the Solar Dynamics Observatory
+  ({SDO}): Overview of Science Objectives, Instrument Design, Data Products,
+  and Model Developments,} \solphys, 275, 115,
+  \dodoi{10.1007/s11207-009-9487-6}
 
 % type= article
 \bibitem[{P.~F. Wyper {et~al.}(2017)Wyper, Antiochos, \& DeVore}]{Wyper2017}
