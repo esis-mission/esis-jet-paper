@@ -82,6 +82,13 @@ jobs:
           rm -f "pages/${DIR}"/*.mp4
           find article -maxdepth 1 -name '*.mp4' -exec cp {} "pages/${DIR}/" \;
 
+          # The formatted bibliography of the article, and its BibTeX files
+          # merged into one at a name that does not change, are published
+          # beside it so that the dissertation which includes it can gather
+          # its references into a cumulative list.
+          cp article/esis-jet.bbl "pages/${DIR}/esis-jet.bbl"
+          for bib in article/*.bib; do cat "$bib"; echo; done > "pages/${DIR}/esis-jet.bib"
+
           cd pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

@@ -88,6 +88,10 @@ The movies of animated figures are published beside the article, since no PDF
 reader can play them, and the caption of each animated figure links to its movie.
 The journal plays them in the online version once the article is published.
 
+The formatted bibliography and the BibTeX file of the article are published
+beside it too, as `esis-jet.bbl` and `esis-jet.bib`, for the cumulative
+References Cited of the dissertation that includes it.
+
 ## Commenting on the draft
 
 Each author has a colored comment macro for notes in the prose:
