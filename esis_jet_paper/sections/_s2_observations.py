@@ -1,5 +1,7 @@
 import aastex
 
+import esis_jet_paper
+
 __all__ = [
     "observations",
 ]
@@ -35,6 +37,8 @@ def observations() -> aastex.Section:
     Its inverted-Y morphology in \OV\ and in the \AIA\ channels, an order of magnitude brighter than
     the surrounding network, and the northward drift of its blue-shifted side by about
     \ang{;;11} over four minutes.
+    Its light curves in every \EUV\ channel of \AIA\ and in \XRT\
+    (Figure~\ref{fig:lightCurves}), from which its lifetime is measured.
 \item \textbf{Phases of the event}, as seen in the preliminary inversions:
     (1) blue shifts of about \SI{60}{\kilo\meter\per\second} directly beside strong red shifts near
     the right footpoint of the inverted Y;
@@ -43,6 +47,8 @@ def observations() -> aastex.Section:
     (3) a blue-shifted blob moves along the right leg at an apparent speed of
     \SIrange{100}{200}{\kilo\meter\per\second} in the plane of the sky.
 \item \textbf{Figures:} the full \ESIS\ field with event E boxed;
+    the light curves of event E (Figure~\ref{fig:lightCurves});
     a time series of event E in \ESIS\ \OV, \AIA\ \SIlist{304;171;193}{\angstrom}, \XRT, and \HMI.
 \end{outline}""")
+    result.append(esis_jet_paper.figures.light_curves())
     return result

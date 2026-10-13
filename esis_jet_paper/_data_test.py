@@ -40,3 +40,17 @@ def test_aia():
     first = position[{"time": 0, "channel": 0}]
     assert np.all(np.abs(position.x - first.x) < 0.01 * u.arcsec)
     assert np.all(np.abs(position.y - first.y) < 0.01 * u.arcsec)
+
+
+def test_aia_304():
+    """The 304 angstrom images are in the same slots and on the same grid as the rest."""
+    images = esis_jet_paper.aia_304()
+    assert images.outputs.shape["time"] == 105
+    assert images.outputs.shape["channel"] == 1
+    assert np.all(images.inputs.wavelength == 304 * u.AA)
+    time = images.inputs.time.ndarray
+    assert np.all(time[1:] > time[:-1])
+    position = images.inputs.position
+    first = esis_jet_paper.aia().inputs.position[{"time": 0, "channel": 0}]
+    assert np.all(np.abs(position.x - first.x) < 0.01 * u.arcsec)
+    assert np.all(np.abs(position.y - first.y) < 0.01 * u.arcsec)
