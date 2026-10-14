@@ -14,14 +14,7 @@ import esis_jet_paper
 
 __all__ = [
     "light_curves",
-    "radius",
 ]
-
-radius = 3 * u.arcsec
-"""
-The radius of the region about each of :data:`esis_jet_paper.points` whose
-mean intensity is plotted.
-"""
 
 _axis = ("detector_x", "detector_y")
 """The axes along which the pixels of every image are arranged."""
@@ -43,7 +36,7 @@ def _curves(
     saturated: None | na.AbstractScalar = None,
 ) -> tuple[dict[str, na.AbstractScalar], na.AbstractScalar]:
     """
-    The mean intensity within :data:`radius` of each of
+    The mean intensity within :data:`esis_jet_paper.radii` of each of
     :data:`esis_jet_paper.points`, and the median intensity of each image.
 
     Parameters
@@ -63,7 +56,7 @@ def _curves(
     for name, (x, y) in esis_jet_paper.points.items():
         distance = np.square(center.x - x * u.arcsec)
         distance = np.sqrt(distance + np.square(center.y - y * u.arcsec))
-        inside = distance <= radius
+        inside = distance <= esis_jet_paper.radii[name]
         mean = np.where(inside, intensity, 0).sum(_axis) / inside.sum(_axis)
         if saturated is not None:
             mean = np.where(np.any(inside & saturated, axis=_axis), np.nan, mean)
@@ -122,8 +115,8 @@ def window() -> tuple[astropy.time.Time, astropy.time.Time]:
 
 def light_curves() -> aastex.Figure:
     """
-    The light curves of the base and the northern footpoint of event E in
-    every EUV channel of AIA and in XRT, each over the median of its image,
+    The light curves of the base, the spire, and the northern footpoint of
+    event E in every EUV channel of AIA and in XRT, each over the median of its image,
     with a line kept for ESIS.
     """
     channels = _channels()
@@ -133,7 +126,7 @@ def light_curves() -> aastex.Figure:
     fig, axs = plt.subplots(
         nrows=len(names),
         sharex=True,
-        figsize=(aastex.column_width_inches, 1.25 * aastex.column_width_inches),
+        figsize=(aastex.column_width_inches, 1.7 * aastex.column_width_inches),
         constrained_layout=True,
     )
 
@@ -165,12 +158,13 @@ def light_curves() -> aastex.Figure:
     result = aastex.Figure("fig:lightCurves", position="t")
     result.add_fig(fig, width=None)
     result.add_caption(aastex.NoEscape(r"""
-The light curves of the base of event E (top) and of its northern footpoint (bottom), the
-two points circled in Figure~\ref{fig:demMovie}, in each \EUV\ channel of \AIA, labeled by
-its wavelength, and in \XRT\ Al\_poly, at the middle of every exposure from
-\lightCurvesStart\ to \lightCurvesStop~UT.
-Each is the mean intensity of the pixels within \lightCurvesRadius\ of the point, over the
-median intensity of its image, so that 1 is the median in every channel.
+The light curves of the base of event E (top), the middle of its spire (middle), and its
+northern footpoint (bottom), the three points circled in Figure~\ref{fig:demMovie}, in each
+\EUV\ channel of \AIA, labeled by its wavelength, and in \XRT\ Al\_poly, at the middle of
+every exposure from \lightCurvesStart\ to \lightCurvesStop~UT.
+Each is the mean intensity of the pixels within \radiusPoint\ of the point, or within
+\radiusSpire\ of the spire, which is narrower, over the median intensity of its image, so
+that 1 is the median in every channel.
 The curve of \XRT\ at the base has a gap where \XRT\ saturated.
 \roy{The \ESIS\ \OV\ curves are left out until the \ESIS\ data are ready.}
 """))

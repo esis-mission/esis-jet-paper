@@ -55,7 +55,7 @@ def test_resample_flat(tmp_path: pathlib.Path, fwhm: u.Quantity) -> None:
     """
     images = _flat(tmp_path, num=40, value=3)
     pitch = 1.1 * u.arcsec
-    counts, uncertainty = esis_jet_paper._dem._resample(
+    counts, uncertainty, _ = esis_jet_paper._dem._resample(
         images=images,
         uncertainty=1 * u.DN,
         position=_grid(12, pitch),
@@ -77,7 +77,7 @@ def test_resample_conserves(tmp_path: pathlib.Path) -> None:
     rng = np.random.default_rng(0)
     outputs = na.ScalarArray(rng.uniform(size=(8, 8)), images.outputs.axes) * u.DN
     images = dataclasses.replace(images, outputs=outputs)
-    counts, _ = esis_jet_paper._dem._resample(
+    counts, _, _ = esis_jet_paper._dem._resample(
         images=images,
         uncertainty=1 * u.DN,
         position=_grid(5, 1.5 * u.arcsec),
@@ -106,8 +106,8 @@ def test_resample_noise(tmp_path: pathlib.Path) -> None:
         seed=1,
     )
     noisy = dataclasses.replace(images, outputs=noise * u.DN)
-    counts, _ = esis_jet_paper._dem._resample(images=noisy, **kwargs)
-    _, uncertainty = esis_jet_paper._dem._resample(images=images, **kwargs)
+    counts, _, _ = esis_jet_paper._dem._resample(images=noisy, **kwargs)
+    _, uncertainty, _ = esis_jet_paper._dem._resample(images=images, **kwargs)
     measured = np.square(counts).mean("trial").mean().ndarray
     predicted = np.square(uncertainty).mean().ndarray
     assert np.isclose(measured, predicted, rtol=0.03)

@@ -77,7 +77,7 @@ def _resample(
     position: na.AbstractCartesian2dVectorArray,
     axis: tuple[str, str],
     fwhm: u.Quantity,
-) -> tuple[na.AbstractScalar, na.AbstractScalar]:
+) -> tuple[na.AbstractScalar, na.AbstractScalar, na.AbstractScalar]:
     """
     Blur AIA images to the resolution of another instrument and sum them
     onto its pixels, along with their uncertainty.
@@ -117,6 +117,12 @@ def _resample(
         The signal of each new pixel, in DN.
     uncertainty
         The one-sigma uncertainty of `counts`.
+    reduction
+        The factor by which the blur and the resampling average down the
+        variance of each new pixel, for each image.
+        The noise of neighboring new pixels is correlated by the blur, so the
+        variance of a sum over a region much wider than the blur is the sum of
+        the variances of its pixels over this factor.
     """
     axis_detector = (images.axis_detector_x, images.axis_detector_y)
 
@@ -163,7 +169,7 @@ def _resample(
     ones = regrid(na.ScalarArray.ones(shape))
     reduction = np.square(noise).mean(axis) / ones.mean(axis)
 
-    return counts, np.sqrt(reduction * variance)
+    return counts, np.sqrt(reduction * variance), reduction
 
 
 def _stack(aia: na.AbstractScalar, xrt: na.AbstractScalar) -> na.AbstractScalar:
@@ -218,31 +224,24 @@ def temperature_response() -> na.FunctionArray:
 
 
 @functools.cache
-def dem() -> Inversion:
+def _noise_xrt() -> tuple[na.AbstractScalar, na.AbstractScalar]:
     """
-    The DEM of event E from AIA and XRT for every Al_poly image of XRT from
-    18:00 to 18:20 UT, inverted as in the DEM tutorial of hinode.
-
-    For each XRT image, the image of each AIA channel closest to the middle
-    of its exposure is blurred to the resolution of XRT and summed onto its
-    pixels with :func:`_resample`.
-    The uncertainty of XRT is scaled to the noise measured over the whole
-    sequence by :meth:`hinode.xrt.Filtergram.ratio_noise`, away from the jet.
-    The pixels where XRT saturated are left without a DEM.
+    The photon noise factor of XRT at log T = 6.3, and the variance of the
+    noise of XRT measured over the whole sequence by
+    :meth:`hinode.xrt.Filtergram.ratio_noise`, away from the jet, over its
+    model.
     """
     images_xrt = esis_jet_paper.xrt()
-    images_aia = esis_jet_paper.aia()
-
-    time_xrt = images_xrt.inputs.time.ndarray
+    time = images_xrt.inputs.time.ndarray[0]
 
     response_xrt = hinode.xrt.temperature_response(
         filter="Al_poly",
-        time=time_xrt[0],
+        time=time,
         axis_filter="channel",
     )[_temperature_xrt]
     variance_xrt = hinode.xrt.temperature_response(
         filter="Al_poly",
-        time=time_xrt[0],
+        time=time,
         variance=True,
         axis_filter="channel",
     )[_temperature_xrt]
@@ -256,7 +255,108 @@ def dem() -> Inversion:
     in_box[_box] = True
     ratio_noise = images_xrt.ratio_noise(noise_photon, where=~in_box)
 
-    time_aia = images_aia.inputs.time.ndarray
+    return noise_photon, ratio_noise
+
+
+@dataclasses.dataclass(frozen=True)
+class _Observation:
+    """
+    The intensities of event E in one XRT image and in the AIA images closest
+    to it, on the pixels of XRT.
+    """
+
+    position: na.AbstractCartesian2dVectorArray
+    """The helioprojective coordinates of the vertices of the pixels."""
+
+    intensity: na.AbstractScalar
+    """
+    The intensity of each pixel per steradian, in the six AIA channels and
+    then in XRT along ``channel``, NaN in XRT where it saturated.
+    """
+
+    uncertainty: na.AbstractScalar
+    """The one-sigma uncertainty of :attr:`intensity`."""
+
+    reduction: na.AbstractScalar
+    """
+    The factor by which :func:`_resample` averages down the variance of each
+    pixel, along ``channel``, one for XRT, which is not resampled.
+    """
+
+    saturated: na.AbstractScalar
+    """Whether XRT saturated in each pixel."""
+
+
+def _observe(i: int) -> _Observation:
+    """
+    The intensities of event E in XRT image `i` of the sequence, and in the
+    image of each AIA channel closest to the middle of its exposure, blurred to
+    the resolution of XRT and summed onto its pixels with :func:`_resample`.
+
+    The uncertainty of XRT is scaled to the noise measured over the whole
+    sequence, from :func:`_noise_xrt`.
+    """
+    images_xrt = esis_jet_paper.xrt()
+    images_aia = esis_jet_paper.aia()
+    noise_photon, ratio_noise = _noise_xrt()
+
+    xrt = images_xrt[{"time": i}][_box]
+    middle = xrt.inputs.time.ndarray + xrt.timedelta.ndarray / 2
+    offset = na.ScalarArray(
+        ndarray=(images_aia.inputs.time.ndarray - middle).to(u.s),
+        axes=images_aia.inputs.time.axes,
+    )
+    offset = offset + images_aia.timedelta / 2
+    aia = images_aia[np.argmin(np.abs(offset), axis="time")]
+
+    position = xrt.inputs.position.to(u.arcsec)
+    counts, uncertainty, reduction = _resample(
+        images=aia,
+        uncertainty=sdo.aia.uncertainty(
+            counts=aia.outputs,
+            wavelength=aia.inputs.wavelength,
+        ),
+        position=position,
+        axis=("detector_x", "detector_y"),
+        fwhm=_fwhm_xrt,
+    )
+
+    cdelt = xrt.inputs.cdelt.position
+    solid_angle_xrt = (cdelt.x * cdelt.y).to(u.sr)
+
+    intensity_aia = counts / aia.timedelta / solid_angle_xrt
+    uncertainty_aia = uncertainty / aia.timedelta / solid_angle_xrt
+
+    # NaN where XRT saturated, which leaves the pixel without a DEM
+    unit = xrt.outputs.unit
+    intensity_xrt = xrt.outputs + np.where(xrt.saturated, np.nan, 0) * unit
+    intensity_xrt = intensity_xrt / solid_angle_xrt
+    uncertainty_xrt = xrt.uncertainty(noise_photon) / solid_angle_xrt
+    uncertainty_xrt = np.sqrt(ratio_noise) * uncertainty_xrt
+
+    return _Observation(
+        position=position,
+        intensity=_stack(intensity_aia, intensity_xrt),
+        uncertainty=_stack(uncertainty_aia, uncertainty_xrt),
+        reduction=np.concatenate(
+            [reduction, na.ScalarArray.ones({"channel": 1})],
+            axis="channel",
+        ),
+        saturated=xrt.saturated,
+    )
+
+
+@functools.cache
+def dem() -> Inversion:
+    """
+    The DEM of event E from AIA and XRT for every Al_poly image of XRT from
+    18:00 to 18:20 UT, inverted as in the DEM tutorial of hinode, from the
+    intensities of :func:`_observe`.
+
+    The pixels where XRT saturated are left without a DEM.
+    """
+    images_xrt = esis_jet_paper.xrt()
+    time_xrt = images_xrt.inputs.time.ndarray
     response = temperature_response()
 
     position = []
@@ -264,52 +364,20 @@ def dem() -> Inversion:
     chi2s = []
     saturated = []
     for i in range(time_xrt.size):
-        xrt = images_xrt[{"time": i}][_box]
-        middle = xrt.inputs.time.ndarray + xrt.timedelta.ndarray / 2
-        offset = na.ScalarArray(
-            ndarray=(time_aia - middle).to(u.s),
-            axes=images_aia.inputs.time.axes,
-        )
-        offset = offset + images_aia.timedelta / 2
-        aia = images_aia[np.argmin(np.abs(offset), axis="time")]
-
-        position_xrt = xrt.inputs.position.to(u.arcsec)
-        counts, uncertainty = _resample(
-            images=aia,
-            uncertainty=sdo.aia.uncertainty(
-                counts=aia.outputs,
-                wavelength=aia.inputs.wavelength,
-            ),
-            position=position_xrt,
-            axis=("detector_x", "detector_y"),
-            fwhm=_fwhm_xrt,
-        )
-
-        cdelt = xrt.inputs.cdelt.position
-        solid_angle_xrt = (cdelt.x * cdelt.y).to(u.sr)
-
-        intensity_aia = counts / aia.timedelta / solid_angle_xrt
-        uncertainty_aia = uncertainty / aia.timedelta / solid_angle_xrt
-
-        # NaN where XRT saturated, which leaves the pixel without a DEM
-        unit = xrt.outputs.unit
-        intensity_xrt = xrt.outputs + np.where(xrt.saturated, np.nan, 0) * unit
-        intensity_xrt = intensity_xrt / solid_angle_xrt
-        uncertainty_xrt = xrt.uncertainty(noise_photon) / solid_angle_xrt
-        uncertainty_xrt = np.sqrt(ratio_noise) * uncertainty_xrt
+        observation = _observe(i)
 
         d, c = utu.dem.plowman(
-            intensity=_stack(intensity_aia, intensity_xrt),
-            uncertainty=_stack(uncertainty_aia, uncertainty_xrt),
+            intensity=observation.intensity,
+            uncertainty=observation.uncertainty,
             response=response,
             axis_channel="channel",
             axis_temperature="temperature",
         )
 
-        position.append(position_xrt)
+        position.append(observation.position)
         dems.append(d.outputs)
         chi2s.append(c)
-        saturated.append(xrt.saturated)
+        saturated.append(observation.saturated)
 
     return Inversion(
         time=time_xrt,
@@ -320,5 +388,5 @@ def dem() -> Inversion:
         ),
         chi2=na.stack(chi2s, axis="time"),
         saturated=na.stack(saturated, axis="time"),
-        ratio_noise=float(ratio_noise.ndarray),
+        ratio_noise=float(_noise_xrt()[1].ndarray),
     )

@@ -11,7 +11,7 @@ from ._data import aia, aia_304, archive, channels, directory_default, xrt
 from ._dem import Inversion, dem, temperature_response
 from ._document import document, pdf
 from ._keywords import keywords
-from ._points import linestyles, points
+from ._points import linestyles, points, radii
 from ._preamble import preamble
 from ._style import rc
 from ._url import url
@@ -38,6 +38,7 @@ __all__ = [
     "pdf",
     "points",
     "preamble",
+    "radii",
     "rc",
     "sections",
     "tables",
