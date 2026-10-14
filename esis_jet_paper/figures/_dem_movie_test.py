@@ -21,10 +21,10 @@ def test_dem_movie():
 def test_field():
     """
     The field that every frame fills holds the base of event E, at about
-    (49, -86) arcsec, and its northern footpoint, at about (68, 0) arcsec,
-    with room to spare.
+    (49, -86) arcsec, its spire, at about (52, -66) arcsec, and its northern
+    footpoint, at about (68, 0) arcsec, with room to spare.
     """
     xlim, ylim = esis_jet_paper.figures._dem_movie._field()
-    for x, y in [(49, -86), (68, 0)]:
+    for x, y in [(49, -86), (52, -66), (68, 0)]:
         assert xlim[0] + 15 < x < xlim[1] - 15
         assert ylim[0] + 15 < y < ylim[1] - 15

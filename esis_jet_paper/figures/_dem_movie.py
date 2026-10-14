@@ -310,8 +310,9 @@ Every temperature and every frame shares one linear scale, up to the
 \demMoviePercentile th percentile of the whole movie, so the brightness of a pixel is how
 much plasma it has and its color is at what temperature.
 White pixels are those where \XRT\ saturated, which have no \DEM.
-The \DEM\ of the pixel nearest each of the two circled points, the base of event E and
-its northern footpoint, is plotted over every temperature of the inversion (right),
+The \DEM\ of the pixel nearest each of the three circled points, the base of event E, the
+middle of its spire, and its northern footpoint, is plotted over every temperature of the
+inversion (right),
 against the median \DEM\ of the pixels in the image (gray line), with the temperatures
 colored in the image shaded gray.
 The animation shows the \DEM\ for each of the \demMovieFrames\ \XRT\ images which began

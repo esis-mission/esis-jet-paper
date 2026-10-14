@@ -38,7 +38,7 @@ def test_saturated():
     images = esis_jet_paper.xrt()
     center = images.inputs.position.cell_centers(axis=("detector_x", "detector_y"))
     x, y = esis_jet_paper.points["base"]
-    radius = esis_jet_paper.figures._light_curves.radius
+    radius = esis_jet_paper.radii["base"]
     distance = np.sqrt(
         np.square(center.x - x * radius.unit) + np.square(center.y - y * radius.unit)
     )

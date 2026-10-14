@@ -30,7 +30,8 @@ def temperature() -> aastex.Section:
     against \AIA\ and the uncertainty this contributes.
 \item \textbf{\DEM\ inversion} \citep{Plowman2013,Plowman2020}, implemented in the \texttt{utu}
     package, cross-checked against an independent method \citep{Hannah2012,Cheung2015}.
-    Report the \DEMs\ with and without each instrument, to show what each contributes.
+    Report the \DEMs\ with and without each instrument, to show what each contributes
+    (Figure~\ref{fig:demRegions}).
 \item \textbf{Results.}
     The \DEM\ of event E compared with that of its surroundings, its peak temperature
     (\temperaturePeak), and whether the event has a coronal component visible to \XRT\ or is
@@ -42,9 +43,10 @@ def temperature() -> aastex.Section:
     \texttt{hinode} package, at the full resolution of \XRT.
 \item \textbf{Figures:} the temperature responses of the three instruments
     (Figure~\ref{fig:temperatureResponses});
-    the \DEMs\ of event E and of the background;
+    the \DEMs\ of event E and of the background (Figure~\ref{fig:demRegions});
     the \DEM\ of event E through its lifetime (Figure~\ref{fig:demMovie}).
 \end{outline}""")
     result.append(esis_jet_paper.figures.temperature_responses())
+    result.append(esis_jet_paper.figures.dem_regions())
     result.append(esis_jet_paper.figures.dem_movie())
     return result

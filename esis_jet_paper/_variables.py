@@ -1,5 +1,6 @@
 import aastex
 import astropy.units as u
+import numpy as np
 
 import esis_jet_paper
 
@@ -45,6 +46,23 @@ def _dem_movie() -> list[aastex.Variable]:
     ]
 
 
+def _dem_regions() -> list[aastex.Variable]:
+    """The numbers in the caption of :func:`esis_jet_paper.figures.dem_regions`."""
+    figure = esis_jet_paper.figures._dem_regions
+    regions = figure.inversions().values()
+    ratio_aia = [region.ratio_aia for region in regions]
+    misfit = max(abs(region.ratio - 1) for region in regions)
+    x, y = figure.background
+    return [
+        aastex.Variable("demRegionsBackgroundX", x * u.arcsec),
+        aastex.Variable("demRegionsBackgroundY", y * u.arcsec),
+        aastex.Variable("demRegionsBackgroundRadius", figure.radius_background),
+        aastex.Variable("demRegionsRatioMin", f"{min(ratio_aia):.1f}"),
+        aastex.Variable("demRegionsRatioMax", f"{max(ratio_aia):.1f}"),
+        aastex.Variable("demRegionsMisfit", np.ceil(100 * misfit) * u.percent),
+    ]
+
+
 def _light_curves() -> list[aastex.Variable]:
     """The numbers in the caption of :func:`esis_jet_paper.figures.light_curves`."""
     figure = esis_jet_paper.figures._light_curves
@@ -52,7 +70,19 @@ def _light_curves() -> list[aastex.Variable]:
     return [
         aastex.Variable("lightCurvesStart", start.strftime("%H:%M:%S")),
         aastex.Variable("lightCurvesStop", stop.strftime("%H:%M:%S")),
-        aastex.Variable("lightCurvesRadius", figure.radius),
+    ]
+
+
+def _points() -> list[aastex.Variable]:
+    """
+    The radii of the regions about :data:`esis_jet_paper.points` whose mean
+    intensities the figures use, one for the base and the footpoint, and one
+    for the spire.
+    """
+    radii = esis_jet_paper.radii
+    return [
+        aastex.Variable("radiusPoint", radii["base"]),
+        aastex.Variable("radiusSpire", radii["spire"]),
     ]
 
 
@@ -84,6 +114,8 @@ def variables() -> list[aastex.Variable]:
             _pending("temperaturePeak"),
         ]
         + _dem_movie()
+        + _dem_regions()
         + _light_curves()
+        + _points()
         + _temperature_responses()
     )
