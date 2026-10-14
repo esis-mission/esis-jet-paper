@@ -199,7 +199,8 @@ def dem_regions() -> aastex.Figure:
 
     logt = np.log10(regions[names[0]].dem.inputs / u.K)
     axs[0].set_yscale("log")
-    axs[0].set_ylim(peak / 1e4, 2 * peak)
+    # Three decades, as in the DEM movie.
+    axs[0].set_ylim(peak / 1e3, 2 * peak)
     axs[0].set_xlim(float(logt.min().ndarray), float(logt.max().ndarray))
     for ax in axs[2:]:
         ax.set_xlabel(r"$\log_{10} T$")
