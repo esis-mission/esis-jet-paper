@@ -364,16 +364,27 @@ def _observe(i: int) -> _Observation:
     )
 
 
-def _background(observation: _Observation) -> na.AbstractScalar:
+def _background(
+    observation: _Observation,
+    size: int = _size_background,
+) -> na.AbstractScalar:
     """
     The background of each pixel of `observation` in each channel: the mean
-    of the pixels in the square of :data:`_size_background` pixels around it,
-    without the brightest and the faintest :data:`_proportion_background` of
-    them, and without the pixels where XRT saturated.
+    of the pixels in the square of `size` pixels around it, without the
+    brightest and the faintest :data:`_proportion_background` of them, and
+    without the pixels where XRT saturated.
+
+    Parameters
+    ----------
+    observation
+        The intensities whose background is found.
+    size
+        The width of the square in pixels of XRT, by default that of the
+        background which :func:`dem` subtracts.
     """
     return na.ndfilters.trimmed_mean_filter(
         observation.intensity,
-        size={"detector_x": _size_background, "detector_y": _size_background},
+        size={"detector_x": size, "detector_y": size},
         where=np.isfinite(observation.intensity),
         proportion=_proportion_background,
     )

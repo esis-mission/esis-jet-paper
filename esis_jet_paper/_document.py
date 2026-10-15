@@ -61,6 +61,9 @@ def document(linenumbers: bool = True) -> aastex.Document:
     doc.append(esis_jet_paper.sections.conclusions())
     doc.append(esis_jet_paper.acknowledgments())
 
+    doc.append(aastex.Appendix())
+    doc.append(esis_jet_paper.sections.background_subtraction())
+
     doc.append(aastex.Bibliography("sources"))
 
     return doc
