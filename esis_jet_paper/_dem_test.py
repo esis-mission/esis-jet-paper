@@ -151,6 +151,61 @@ def test_dem():
     assert 0 < inversion.ratio_noise < 1
 
 
+def test_background() -> None:
+    """
+    The background of a flat field crossed by a bright stripe three pixels
+    wide is the flat field everywhere, on the stripe too, and leaves out a
+    pixel where XRT saturated.
+    """
+    num = 64
+    x = na.arange(0, num, axis="detector_x")
+    y = na.arange(0, num, axis="detector_y")
+    unit = u.DN / u.s / u.sr
+    shape = {"channel": 7, "detector_x": num, "detector_y": num}
+    intensity = np.where((x >= 30) & (x < 33), 10, 1) * na.ScalarArray.ones(shape)
+    saturated = (x == 10) & (y == 20)
+    intensity = (intensity + np.where(saturated, np.nan, 0)) * unit
+    observation = esis_jet_paper._dem._Observation(
+        position=na.Cartesian2dVectorArray(x, y) * u.arcsec,
+        intensity=intensity,
+        uncertainty=intensity,
+        reduction=na.ScalarArray.ones({"channel": 7}),
+        saturated=saturated,
+    )
+    background = esis_jet_paper._dem._background(observation)
+    assert background.shape == shape
+    assert np.allclose((background / unit).ndarray, 1)
+
+
+def test_dem_subtract_background():
+    """
+    With the background subtracted, the DEM is missing only where XRT
+    saturated, the pixels no brighter than their background have practically
+    none, the rest fit to within their noise, and there is less plasma in all
+    than without.
+    """
+    original = esis_jet_paper.dem()
+    assert esis_jet_paper.dem(False) is original
+    inversion = esis_jet_paper.dem(subtract_background=True)
+
+    assert inversion.dem.outputs.shape == original.dem.outputs.shape
+    missing = np.isnan(inversion.dem.outputs).any("temperature")
+    assert np.all(missing == inversion.saturated)
+
+    dem = (inversion.dem.outputs * u.cm**5).to(u.dimensionless_unscaled)
+    peak = dem.max("temperature")
+    fit = inversion.chi2 >= 0
+    unfit = ~fit & ~inversion.saturated
+    assert np.any(unfit.ndarray)
+    peak_unfit = np.nanmax(np.where(unfit, peak, np.nan).ndarray)
+    peak_fit = np.nanmedian(np.where(fit, peak, np.nan).ndarray)
+    assert peak_unfit < 1e-6 * peak_fit
+    assert 0.8 < np.nanmedian(np.where(fit, inversion.chi2, np.nan).ndarray) < 1.2
+
+    total = (original.dem.outputs * u.cm**5).to(u.dimensionless_unscaled)
+    assert np.nansum(dem.ndarray) < np.nansum(total.ndarray)
+
+
 def test_temperature_response():
     """
     The six AIA channels and XRT respond on the temperatures of the DEM, with

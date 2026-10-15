@@ -1,3 +1,4 @@
+import dataclasses
 import pathlib
 
 import aastex
@@ -72,46 +73,55 @@ def _field() -> tuple[tuple[float, float], tuple[float, float]]:
     return xlim, ylim
 
 
-def _shown() -> tuple[
-    na.AbstractScalar,
-    na.AbstractScalar,
-    float,
-    tuple[tuple[float, float], tuple[float, float]],
-]:
+@dataclasses.dataclass(frozen=True)
+class _Row:
     """
-    The log T of each temperature shown, the DEM there in units of
-    :data:`_scale`, the value at which the brightness saturates, and the
-    limits of the field shown, from :func:`_field`.
+    What one row of the figure draws, from the DEM with or without the
+    background subtracted.
     """
-    inversion = esis_jet_paper.dem()
+
+    subtract_background: bool
+    """Whether the background was subtracted from the intensities first."""
+
+    logt: na.AbstractScalar
+    """The log T of each temperature colored in the image."""
+
+    dem: na.AbstractScalar
+    """The DEM at each of :attr:`logt` in units of :data:`_scale`."""
+
+    vmax: float
+    """The DEM at which the brightness saturates."""
+
+    logt_all: na.AbstractScalar
+    """The log T of every temperature of the inversion."""
+
+    curves: dict[str, na.AbstractScalar]
+    """
+    The DEM in units of :data:`_scale` of the pixel nearest each of
+    :data:`esis_jet_paper.points` in every frame.
+    """
+
+    median: na.AbstractScalar
+    """The median DEM of the pixels inside the field of :func:`_field` in every frame."""
+
+
+def _row(subtract_background: bool) -> _Row:
+    """
+    What one row of the figure draws, from the DEM of
+    :func:`esis_jet_paper.dem` with or without the background subtracted.
+
+    The brightness saturates at the :data:`percentile` th percentile of the
+    DEM of the row over the whole movie.
+    The pixel nearest each point is found again in each frame, since each
+    XRT image points a little differently.
+    """
+    inversion = esis_jet_paper.dem(subtract_background)
     logt = np.log10(inversion.dem.inputs / u.K)
+    dem = (inversion.dem.outputs / _scale).to(u.dimensionless_unscaled)
+
     where = (logt >= temperature_min - 1e-6) & (logt <= temperature_max + 1e-6)
-    index = {"temperature": np.flatnonzero(where.ndarray)}
-    dem = (inversion.dem.outputs / _scale).to(u.dimensionless_unscaled)
-    dem = dem[index]
-    vmax = float(np.nanpercentile(dem.ndarray, percentile))
-    return logt[index], dem, vmax, _field()
-
-
-def _curves() -> tuple[
-    na.AbstractScalar,
-    dict[str, na.AbstractScalar],
-    na.AbstractScalar,
-    tuple[float, float],
-]:
-    """
-    The log T of every temperature of the inversion, the DEM in units of
-    :data:`_scale` of the pixel nearest each of :data:`esis_jet_paper.points`
-    in every frame,
-    the median DEM of the pixels inside the field of :func:`_field` in every
-    frame, and limits of the DEM which hold every frame.
-
-    The pixel is found again in each frame, since each XRT image points a
-    little differently.
-    """
-    inversion = esis_jet_paper.dem()
-    logt = np.log10(inversion.dem.inputs / u.K)
-    dem = (inversion.dem.outputs / _scale).to(u.dimensionless_unscaled)
+    temperature = {"temperature": np.flatnonzero(where.ndarray)}
+    shown = dem[temperature]
 
     position = inversion.position.to(u.arcsec)
     lo, hi = slice(None, -1), slice(1, None)
@@ -138,44 +148,48 @@ def _curves() -> tuple[
         axis=("detector_x", "detector_y"),
     )
 
-    peak = max(float(np.nanmax(c.ndarray)) for c in curves.values())
-    limits = (peak / 1e3, 2 * peak)
-
-    return logt, curves, median, limits
+    return _Row(
+        subtract_background=subtract_background,
+        logt=logt[temperature],
+        dem=shown,
+        vmax=float(np.nanpercentile(shown.ndarray, percentile)),
+        logt_all=logt,
+        curves=curves,
+        median=median,
+    )
 
 
 def _draw(
     axs: np.ndarray,
     i: int,
-    logt: na.AbstractScalar,
-    dem: na.AbstractScalar,
-    vmax: float,
+    row: _Row,
     field: tuple[tuple[float, float], tuple[float, float]],
-    logt_all: na.AbstractScalar,
-    curves: dict[str, na.AbstractScalar],
-    median: na.AbstractScalar,
     limits: tuple[float, float],
 ) -> None:
     """
-    Draw the false-color DEM of frame `i` on the image and colorbar axes,
-    given what :func:`_shown` returns, and the DEM at each of
-    :data:`esis_jet_paper.points` on the third axes, given what
-    :func:`_curves` returns.
+    Draw the false-color DEM of frame `i` of `row` on the image and colorbar
+    axes, and the DEM at each of :data:`esis_jet_paper.points` on the third
+    axes, within the `field` of :func:`_field` and between the DEM `limits`.
+
+    The row with the background subtracted goes beneath the other, which
+    carries the time and the legend. It leaves out the median, since the
+    median pixel is no brighter than its background.
     """
     inversion = esis_jet_paper.dem()
     position = inversion.position[{"time": i}]
-    dem = dem[{"time": i}]
+    dem = row.dem[{"time": i}]
+    logt_all = row.logt_all
 
     for ax in axs:
         ax.clear()
     colorbar = na.plt.rgbmesh(
-        logt,
+        row.logt,
         position,
         C=dem,
         axis_wavelength="temperature",
         ax=axs[0],
         vmin=0,
-        vmax=vmax,
+        vmax=row.vmax,
         # in the PDF, so that no seams show between the pixels
         rasterized=True,
     )
@@ -195,12 +209,18 @@ def _draw(
         rasterized=True,
     )
 
-    time = inversion.time[i].strftime("%H:%M:%S")
-    axs[0].set_title(f"{time} UT")
+    if row.subtract_background:
+        axs[0].set_title("background subtracted")
+        axs[0].set_xlabel("helioprojective $x$ (arcsec)")
+        axs[2].set_xlabel(r"$\log_{10} T$")
+    else:
+        time = inversion.time[i].strftime("%H:%M:%S")
+        axs[0].set_title(f"{time} UT")
+        # Blank, rather than left to the unit of the coordinates.
+        axs[0].set_xlabel("")
     axs[0].set_xlim(field[0])
     axs[0].set_ylim(field[1])
     axs[0].set_aspect("equal")
-    axs[0].set_xlabel("helioprojective $x$ (arcsec)")
     axs[0].set_ylabel("helioprojective $y$ (arcsec)")
     axs[1].set_xlabel(r"DEM ($10^{27}\,\mathrm{cm^{-5}}$)")
     axs[1].set_ylabel(r"$\log_{10} T$")
@@ -226,7 +246,7 @@ def _draw(
             textcoords="offset points",
             color="white",
         )
-        curve = curves[name][{"time": i}]
+        curve = row.curves[name][{"time": i}]
         # XRT saturated in this pixel, which left it without a DEM.
         label = f"{name}, saturated" if np.all(np.isnan(curve.ndarray)) else name
         na.plt.plot(
@@ -238,40 +258,52 @@ def _draw(
             linestyle=esis_jet_paper.linestyles[name],
             label=label,
         )
-    # Last in the legend, but beneath the points, above the shading.
-    na.plt.plot(
-        logt_all,
-        median[{"time": i}],
-        axis="temperature",
-        ax=axs[2],
-        color="0.5",
-        label="median",
-        zorder=1.5,
-    )
+    if not row.subtract_background:
+        # Last in the legend, but beneath the points, above the shading.
+        na.plt.plot(
+            logt_all,
+            row.median[{"time": i}],
+            axis="temperature",
+            ax=axs[2],
+            color="0.5",
+            label="median",
+            zorder=1.5,
+        )
+        axs[2].legend(loc="upper right")
     axs[2].set_yscale("log")
     axs[2].set_xlim(float(logt_all.min().ndarray), float(logt_all.max().ndarray))
     axs[2].set_ylim(limits)
-    axs[2].set_xlabel(r"$\log_{10} T$")
     axs[2].set_ylabel(r"DEM ($10^{27}\,\mathrm{cm^{-5}}$)")
     axs[2].yaxis.tick_right()
     axs[2].yaxis.set_label_position("right")
-    axs[2].legend(loc="upper right")
 
 
 def dem_movie() -> aastex.Figure:
     """
     The DEM of event E as a false-color image, at one time in the PDF and
-    for every XRT image from 18:00 to 18:20 UT in the movie.
+    for every XRT image from 18:00 to 18:20 UT in the movie, with and
+    without the background subtracted.
     """
     inversion = esis_jet_paper.dem()
-    shown = _shown() + _curves()
+    rows = [_row(subtract_background) for subtract_background in (False, True)]
+    field = _field()
+    # Both rows share the limits of the DEM, which hold every frame.
+    peak = max(
+        float(np.nanmax(curve.ndarray)) for row in rows for curve in row.curves.values()
+    )
+    limits = (peak / 1e3, 2 * peak)
+
+    def draw(i: int) -> None:
+        for ax, row in zip(axs, rows):
+            _draw(ax, i, row, field, limits)
 
     # The movie is drawn in the same fonts as the still, even when it is
     # made outside of :func:`esis_jet_paper.document`.
     with plt.rc_context(esis_jet_paper.rc):
         fig, axs = plt.subplots(
+            nrows=2,
             ncols=3,
-            figsize=(aastex.text_width_inches, 0.42 * aastex.text_width_inches),
+            figsize=(aastex.text_width_inches, 0.8 * aastex.text_width_inches),
             gridspec_kw={"width_ratios": [0.46, 0.06, 0.48]},
             constrained_layout=True,
         )
@@ -286,13 +318,13 @@ def dem_movie() -> aastex.Figure:
         with writer.saving(fig, movie, dpi=300):
             # Constrained layout settles on the second draw of axes with a
             # fixed aspect, so draw once before the first frame is recorded.
-            _draw(axs, 0, *shown)
+            draw(0)
             fig.canvas.draw()
             for i in range(inversion.time.size):
-                _draw(axs, i, *shown)
+                draw(i)
                 writer.grab_frame()
 
-        _draw(axs, index_still(), *shown)
+        draw(index_still())
 
     result = aastex.FigureStar(
         "fig:demMovie",
@@ -302,19 +334,25 @@ def dem_movie() -> aastex.Figure:
     result.add_fig(fig, width=None)
     result.add_caption(aastex.NoEscape(r"""
 The \DEM\ of event E from the six \EUV\ channels of \AIA\ and from \XRT\ Al\_poly at
-\demMovieStill~UT, as a false-color image (left).
+\demMovieStill~UT, as a false-color image (left), inverted from the intensities as observed
+(top) and with the background of each pixel subtracted first (bottom): in each channel, the
+mean of the \demBackgroundSize\ by \demBackgroundSize\ pixels of \XRT\
+(\demBackgroundWidth) around it, without the brightest and the faintest
+\demBackgroundProportion\ of them, which leaves out event E.
 Each pixel is colored as if the \DEM\ were the spectrum of the light it emits, with
 $\log_{10} T$ from \demMovieTemperatureMin\ to \demMovieTemperatureMax\ mapped onto the
 visible spectrum, from violet for the coolest plasma to red for the hottest (middle).
-Every temperature and every frame shares one linear scale, up to the
-\demMoviePercentile th percentile of the whole movie, so the brightness of a pixel is how
-much plasma it has and its color is at what temperature.
-White pixels are those where \XRT\ saturated, which have no \DEM.
+Every temperature and every frame of a row shares one linear scale, up to the
+\demMoviePercentile th percentile of the row over the whole movie, so the brightness of a
+pixel is how much plasma it has and its color is at what temperature.
+White pixels are those where \XRT\ saturated, which have no \DEM, and black pixels in the
+bottom row are those no brighter than their background in any channel.
 The \DEM\ of the pixel nearest each of the three circled points, the base of event E, the
-middle of its spire, and its northern footpoint, is plotted over every temperature of the
-inversion (right),
-against the median \DEM\ of the pixels in the image (gray line), with the temperatures
-colored in the image shaded gray.
+hottest part of its spire, and its northern footpoint, is plotted over every temperature of
+the inversion (right),
+against the median \DEM\ of the pixels in the image (gray line, top only, since the median
+pixel is no brighter than its background), with the temperatures colored in the image shaded
+gray.
 The animation shows the \DEM\ for each of the \demMovieFrames\ \XRT\ images which began
 from \demMovieStart\ to \demMovieStop~UT, at \demMovieFps\ frames per second, and runs
 for \demMovieDuration.

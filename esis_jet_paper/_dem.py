@@ -47,6 +47,20 @@ _plate_scale_aia = 0.6 * u.arcsec
 _unit_response = u.DN * u.cm**5 / u.s / u.sr
 """The unit of the temperature responses, per steradian like the intensities."""
 
+_size_background = 31
+"""
+The width, in pixels of XRT, of the square around each pixel whose trimmed
+mean is its background, about 32 arcseconds, much wider than the base, the
+spire, and the footpoint of event E.
+"""
+
+_proportion_background = 0.25
+"""
+The proportion of the brightest and of the faintest pixels of each square
+left out of the trimmed mean, which leaves out event E, since it fills only
+a small part of the square.
+"""
+
 
 @dataclasses.dataclass(frozen=True)
 class Inversion:
@@ -62,7 +76,11 @@ class Inversion:
     """The DEM of each pixel per unit log T, along ``temperature``."""
 
     chi2: na.AbstractScalar
-    """The reduced chi squared of each pixel, -1 where it has no DEM."""
+    """
+    The reduced chi squared of each pixel, -1 where it has no DEM, or, with
+    the background subtracted, where it is no brighter than its background in
+    any channel.
+    """
 
     saturated: na.AbstractScalar
     """Whether XRT saturated in each pixel, which leaves it without a DEM."""
@@ -346,15 +364,48 @@ def _observe(i: int) -> _Observation:
     )
 
 
-@functools.cache
-def dem() -> Inversion:
+def _background(observation: _Observation) -> na.AbstractScalar:
+    """
+    The background of each pixel of `observation` in each channel: the mean
+    of the pixels in the square of :data:`_size_background` pixels around it,
+    without the brightest and the faintest :data:`_proportion_background` of
+    them, and without the pixels where XRT saturated.
+    """
+    return na.ndfilters.trimmed_mean_filter(
+        observation.intensity,
+        size={"detector_x": _size_background, "detector_y": _size_background},
+        where=np.isfinite(observation.intensity),
+        proportion=_proportion_background,
+    )
+
+
+def dem(subtract_background: bool = False) -> Inversion:
     """
     The DEM of event E from AIA and XRT for every Al_poly image of XRT from
     18:00 to 18:20 UT, inverted as in the DEM tutorial of hinode, from the
     intensities of :func:`_observe`.
 
     The pixels where XRT saturated are left without a DEM.
+
+    Parameters
+    ----------
+    subtract_background
+        Whether to subtract the background of :func:`_background` from the
+        intensities first, so that the DEM is that of the plasma brighter
+        than its surroundings.
+        The uncertainty is that of the intensities alone, since the
+        background averages hundreds of pixels.
+        A pixel no brighter than its background in any channel is left with
+        a DEM of practically zero and a chi squared of -1.
     """
+    # Called with the argument by position, so that both ways of asking for
+    # either inversion share one entry of the cache.
+    return _invert(subtract_background)
+
+
+@functools.cache
+def _invert(subtract_background: bool) -> Inversion:
+    """The inversion of :func:`dem`."""
     images_xrt = esis_jet_paper.xrt()
     time_xrt = images_xrt.inputs.time.ndarray
     response = temperature_response()
@@ -365,9 +416,12 @@ def dem() -> Inversion:
     saturated = []
     for i in range(time_xrt.size):
         observation = _observe(i)
+        intensity = observation.intensity
+        if subtract_background:
+            intensity = intensity - _background(observation)
 
         d, c = utu.dem.plowman(
-            intensity=observation.intensity,
+            intensity=intensity,
             uncertainty=observation.uncertainty,
             response=response,
             axis_channel="channel",

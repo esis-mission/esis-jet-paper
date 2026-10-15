@@ -158,8 +158,8 @@ def light_curves() -> aastex.Figure:
     result = aastex.Figure("fig:lightCurves", position="t")
     result.add_fig(fig, width=None)
     result.add_caption(aastex.NoEscape(r"""
-The light curves of the base of event E (top), the middle of its spire (middle), and its
-northern footpoint (bottom), the three points circled in Figure~\ref{fig:demMovie}, in each
+The light curves of the base of event E (top), the hottest part of its spire (middle), and
+its northern footpoint (bottom), the three points circled in Figure~\ref{fig:demMovie}, in each
 \EUV\ channel of \AIA, labeled by its wavelength, and in \XRT\ Al\_poly, at the middle of
 every exposure from \lightCurvesStart\ to \lightCurvesStop~UT.
 Each is the mean intensity of the pixels within \radiusPoint\ of the point, or within
