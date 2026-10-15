@@ -40,7 +40,8 @@ def temperature() -> aastex.Section:
 \item \textbf{Evolution.}
     The \DEM\ of event E from \AIA\ and \XRT\ for every \XRT\ image from \demMovieStart\ to
     \demMovieStop~UT (Figure~\ref{fig:demMovie}), inverted as in the \DEM\ tutorial of the
-    \texttt{hinode} package, at the full resolution of \XRT.
+    \texttt{hinode} package, at the full resolution of \XRT, with and without the background
+    subtracted.
 \item \textbf{Figures:} the temperature responses of the three instruments
     (Figure~\ref{fig:temperatureResponses});
     the \DEMs\ of event E and of the background (Figure~\ref{fig:demRegions});

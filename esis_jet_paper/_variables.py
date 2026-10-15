@@ -23,9 +23,28 @@ def _pending(name: str) -> aastex.Variable:
     return aastex.Variable(name=name, value=aastex.NoEscape(r"\textbf{XX}"))
 
 
+def _backgrounds() -> list[aastex.Variable]:
+    """
+    The numbers in the appendix on the background and in the captions of
+    :func:`esis_jet_paper.figures.backgrounds` and
+    :func:`esis_jet_paper.figures.dem_backgrounds`.
+    """
+    figure = esis_jet_paper.figures._backgrounds
+
+    # The plate scale of XRT is the same in every image.
+    cdelt = esis_jet_paper.xrt().inputs.cdelt.position[{"time": 0}]
+    width = figure.size_wide * cdelt.x.ndarray.to(u.arcsec)
+
+    return [
+        aastex.Variable("backgroundsSizeWide", figure.size_wide),
+        aastex.Variable("backgroundsWidthWide", np.round(width)),
+    ]
+
+
 def _dem_movie() -> list[aastex.Variable]:
     """The numbers in the caption of :func:`esis_jet_paper.figures.dem_movie`."""
     figure = esis_jet_paper.figures._dem_movie
+    module = esis_jet_paper._dem
 
     time = esis_jet_paper.dem().time
     num = time.size
@@ -33,7 +52,17 @@ def _dem_movie() -> list[aastex.Variable]:
     def clock(i: int) -> str:
         return time[i].strftime("%H:%M:%S")
 
+    # The plate scale of XRT is the same in every image.
+    cdelt = esis_jet_paper.xrt().inputs.cdelt.position[{"time": 0}]
+    width = module._size_background * cdelt.x.ndarray.to(u.arcsec)
+
     return [
+        aastex.Variable("demBackgroundSize", module._size_background),
+        aastex.Variable("demBackgroundWidth", np.round(width)),
+        aastex.Variable(
+            "demBackgroundProportion",
+            100 * module._proportion_background * u.percent,
+        ),
         aastex.Variable("demMovieFrames", num),
         aastex.Variable("demMovieStart", clock(0)),
         aastex.Variable("demMovieStop", clock(num - 1)),
@@ -113,6 +142,7 @@ def variables() -> list[aastex.Variable]:
             _pending("velocityRed"),
             _pending("temperaturePeak"),
         ]
+        + _backgrounds()
         + _dem_movie()
         + _dem_regions()
         + _light_curves()

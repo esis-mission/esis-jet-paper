@@ -213,8 +213,8 @@ def dem_regions() -> aastex.Figure:
     result = aastex.Figure("fig:demRegions", position="t")
     result.add_fig(fig, width=None)
     result.add_caption(aastex.NoEscape(r"""
-The \DEMs\ of the base of event E, the middle of its spire, its northern footpoint, and a
-background region of network at \demMovieStill~UT, the time of the still of
+The \DEMs\ of the base of event E, the hottest part of its spire, its northern footpoint,
+and a background region of network at \demMovieStill~UT, the time of the still of
 Figure~\ref{fig:demMovie}, each inverted from the mean intensities of the pixels within
 \radiusPoint\ of the point, \radiusSpire\ for the spire, or within
 \demRegionsBackgroundRadius\ of (\demRegionsBackgroundX, \demRegionsBackgroundY) for the

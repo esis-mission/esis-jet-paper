@@ -3,6 +3,7 @@ The sections of this article, each a factory function returning an
 :class:`aastex.Section`.
 """
 
+from ._a1_background_subtraction import background_subtraction
 from ._s0_abstract import abstract
 from ._s1_introduction import introduction
 from ._s2_observations import observations
@@ -14,6 +15,7 @@ from ._s7_conclusions import conclusions
 
 __all__ = [
     "abstract",
+    "background_subtraction",
     "conclusions",
     "discussion",
     "introduction",
