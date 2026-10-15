@@ -16,6 +16,7 @@ __all__ = [
     "dem_regions",
     "inversions",
     "radius_background",
+    "temperature_peak",
 ]
 
 background = (95, -10)
@@ -146,6 +147,16 @@ def inversions() -> dict[str, Region]:
             ratio=ratio(dem, intensity),
         )
     return result
+
+
+def temperature_peak() -> u.Quantity:
+    """
+    The temperature at which the DEM of the base of event E from AIA and XRT,
+    that of :func:`inversions`, peaks.
+    """
+    dem = inversions()["base"].dem
+    index = np.argmax(dem.outputs, axis="temperature")
+    return dem.inputs[index].ndarray
 
 
 def dem_regions() -> aastex.Figure:

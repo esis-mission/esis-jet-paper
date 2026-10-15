@@ -23,20 +23,27 @@ def observations() -> aastex.Section:
     \AIA\ \EUV\ images at a \SI{12}{\second} cadence \citep{Lemen2012};
     \HMI\ \LOSShort\ magnetograms at a \SI{45}{\second} cadence, about seven of which cover the
     flight \citep{Scherrer2012};
-    \XRT\ images of a field near disk center at a cadence of about \SI{18}{\second} throughout the
-    flight \citep{Golub2007,Kosugi2007}, \roy{filter(s) and field of view to confirm}.
-    \IRISCapital\ ran coarse rasters near disk center during the launch window; check whether any
-    of them crossed event E.
+    \XRT\ images through its Al\_poly filter, the only X-ray filter it used during the flight, of a
+    field \xrtFieldWidth\ across near disk center at \xrtPlateScale\ per pixel, at a cadence of
+    about \xrtCadence\ throughout the flight \citep{Golub2007,Kosugi2007}.
+    \IRISCapital\ ran coarse rasters near disk center during the launch window, but its slit never
+    crossed event E, so there are no \IRIS\ spectra of it; its \SI{1400}{\angstrom} slit-jaw images
+    show most of event E, which is cut off by the edge of their field.
 \item \textbf{Co-alignment.}
     \ESIS\ to \AIA\ \SI{304}{\angstrom} (which correlates best with \HeI), and \HMI\ and \XRT\ to
     \AIA, with the residual misalignment that bounds the comparisons in
     Sections~\ref{sec:MagneticTopology} and~\ref{sec:Temperature}.
 \item \textbf{Overview of event E.}
     Its location, (\ang{;;47.8}, \ang{;;-87.8}), about \ang{;;100} from disk center, and its
-    lifetime (\eventDuration), including the parts before and after the \ESIS\ exposures from \AIA.
+    lifetime (\eventDuration, from \eventStart\ to \eventStop~UT), including the parts before and
+    after the \ESIS\ exposures from \AIA, over which its base is brighter in \AIA\
+    \SI{304}{\angstrom}, the channel in which it brightens first, than before the event by more
+    than \lifetimeFraction\ of its peak brightening.
     Its inverted-Y morphology in \OV\ and in the \AIA\ channels, an order of magnitude brighter than
     the surrounding network, and the northward drift of its blue-shifted side by about
     \ang{;;11} over four minutes.
+    Its length (\eventLength), in the plane of the sky from its base to its northern footpoint,
+    where the fainter arc which continues its spire ends.
     Its light curves in every \EUV\ channel of \AIA\ and in \XRT\
     (Figure~\ref{fig:lightCurves}), from which its lifetime is measured.
 \item \textbf{Phases of the event}, as seen in the preliminary inversions:

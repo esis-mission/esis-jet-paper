@@ -37,3 +37,9 @@ def test_background():
     assert ylim[0] + radius < y < ylim[1] - radius
     for name, (x_point, y_point) in esis_jet_paper.points.items():
         assert np.hypot(x - x_point, y - y_point) > 20, name
+
+
+def test_temperature_peak():
+    """The DEM of the base of event E peaks in the corona."""
+    temperature = esis_jet_paper.figures._dem_regions.temperature_peak()
+    assert 1 * u.MK < temperature < 3 * u.MK

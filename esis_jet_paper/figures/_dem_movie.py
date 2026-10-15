@@ -7,6 +7,7 @@ import astropy.units as u
 import matplotlib.animation
 import matplotlib.colors
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import named_arrays as na
 import numpy as np
 
@@ -223,6 +224,9 @@ def _draw(
     axs[0].set_aspect("equal")
     axs[0].set_ylabel("helioprojective $y$ (arcsec)")
     axs[1].set_xlabel(r"DEM ($10^{27}\,\mathrm{cm^{-5}}$)")
+    # Without trailing zeros, so that the ticks of the narrow colorbar of a
+    # faint row, like 0.00 and 0.25, do not run together.
+    axs[1].xaxis.set_major_formatter(matplotlib.ticker.StrMethodFormatter("{x:g}"))
     axs[1].set_ylabel(r"$\log_{10} T$")
     axs[1].yaxis.tick_right()
     axs[1].yaxis.set_label_position("right")

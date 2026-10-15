@@ -1,6 +1,11 @@
 import astropy.units as u
+import numpy as np
+import sunpy.coordinates
+
+import esis_jet_paper
 
 __all__ = [
+    "length",
     "linestyles",
     "points",
     "radii",
@@ -37,3 +42,23 @@ linestyles = {
     "footpoint": "--",
 }
 """The style of the line of each of :data:`points`, the same in every figure."""
+
+
+def length() -> u.Quantity:
+    """
+    The length of event E: the distance in the plane of the sky from its base
+    to its northern footpoint, where the fainter arc which continues its spire
+    ends.
+
+    The angle between the two :data:`points` is taken at the distance of the
+    Sun from the Earth at the still of the DEM movie, since SDO and Hinode
+    both orbit the Earth.
+    """
+    (x_base, y_base), (x_footpoint, y_footpoint) = (
+        points["base"],
+        points["footpoint"],
+    )
+    angle = np.hypot(x_footpoint - x_base, y_footpoint - y_base) * u.arcsec
+    time = esis_jet_paper.figures._dem_movie.time_still
+    distance = sunpy.coordinates.get_earth(time).radius
+    return (angle.to_value(u.rad) * distance).to(u.Mm)
