@@ -21,7 +21,7 @@ dependencies = [
     "solar-dynamics-observatory~=1.2",
     "sunpy",
     "hinode~=0.3",
-    "utu~=0.3",
+    "utu~=0.5",
 ]
 dynamic = ["version"]
 

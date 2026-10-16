@@ -111,14 +111,14 @@ def inversions() -> dict[str, Region]:
     aia = {"channel": slice(num_aia)}
     xrt = {"channel": num_aia}
 
-    logt = np.log10(response.inputs / u.K)
-    step = logt[{"temperature": 1}] - logt[{"temperature": 0}]
-
     def ratio(
         dem: na.FunctionArray,
         intensity: na.AbstractScalar,
     ) -> float:
-        predicted = dem.outputs * response.outputs[xrt] * step
+        # The intensity as the inversion models it, with the DEM and the
+        # response both linear in log T between the temperatures.
+        emission_measure = utu.dem.emission_measure(dem, "temperature")
+        predicted = emission_measure * response.outputs[xrt]
         predicted = predicted.sum("temperature")
         ratio = (predicted / intensity[xrt]).to(u.dimensionless_unscaled)
         return float(ratio.ndarray)
