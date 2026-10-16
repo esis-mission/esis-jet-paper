@@ -47,10 +47,10 @@ _plate_scale_aia = 0.6 * u.arcsec
 _unit_response = u.DN * u.cm**5 / u.s / u.sr
 """The unit of the temperature responses, per steradian like the intensities."""
 
-_size_background = 31
+_size_background = 61
 """
 The width, in pixels of XRT, of the square around each pixel whose trimmed
-mean is its background, about 32 arcseconds, much wider than the base, the
+mean is its background, about 63 arcseconds, much wider than the base, the
 spire, and the footpoint of event E.
 """
 

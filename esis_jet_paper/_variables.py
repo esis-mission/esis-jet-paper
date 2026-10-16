@@ -33,11 +33,11 @@ def _backgrounds() -> list[aastex.Variable]:
 
     # The plate scale of XRT is the same in every image.
     cdelt = esis_jet_paper.xrt().inputs.cdelt.position[{"time": 0}]
-    width = figure.size_wide * cdelt.x.ndarray.to(u.arcsec)
+    width = figure.size_narrow * cdelt.x.ndarray.to(u.arcsec)
 
     return [
-        aastex.Variable("backgroundsSizeWide", figure.size_wide),
-        aastex.Variable("backgroundsWidthWide", np.round(width)),
+        aastex.Variable("backgroundsSizeNarrow", figure.size_narrow),
+        aastex.Variable("backgroundsWidthNarrow", np.round(width)),
     ]
 
 

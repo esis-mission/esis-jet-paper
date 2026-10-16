@@ -145,7 +145,7 @@ def dem_backgrounds() -> aastex.FigureStar:
     result.add_caption(aastex.NoEscape(r"""
 The \DEM\ of event E at \demMovieStill~UT, as in the top row of Figure~\ref{fig:demMovie} (left),
 and the \DEMs\ inverted from its backgrounds of \demBackgroundSize\ by \demBackgroundSize\
-(middle) and \backgroundsSizeWide\ by \backgroundsSizeWide\ pixels (right) in
+(middle) and \backgroundsSizeNarrow\ by \backgroundsSizeNarrow\ pixels (right) in
 Figure~\ref{fig:backgrounds}, as false-color images
 colored as in Figure~\ref{fig:demMovie}, on the brightness scale of its top row (top), and in the
 pixel nearest each of the three circled points (bottom), with the temperatures colored in the
