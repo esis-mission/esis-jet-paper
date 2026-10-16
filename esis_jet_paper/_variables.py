@@ -1,4 +1,5 @@
 import aastex
+import astropy.time
 import astropy.units as u
 import numpy as np
 
@@ -89,6 +90,32 @@ def _dem_regions() -> list[aastex.Variable]:
         aastex.Variable("demRegionsRatioMin", f"{min(ratio_aia):.1f}"),
         aastex.Variable("demRegionsRatioMax", f"{max(ratio_aia):.1f}"),
         aastex.Variable("demRegionsMisfit", np.ceil(100 * misfit) * u.percent),
+    ]
+
+
+def _flux_history() -> list[aastex.Variable]:
+    """The numbers in the caption of :func:`esis_jet_paper.figures.flux_history`."""
+    figure = esis_jet_paper.figures._flux_history
+    time = esis_jet_paper.hmi_history().inputs.time.ndarray
+    cadence = np.median((time[1:] - time[:~0]).to(u.min))
+
+    def moment(t: astropy.time.Time) -> aastex.NoEscape:
+        return aastex.NoEscape(
+            f"{t.strftime('%H:%M')}~UT on {t.strftime('%B')}~{t.datetime.day}"
+        )
+
+    return [
+        aastex.Variable("fluxHistoryStart", moment(time[0])),
+        aastex.Variable("fluxHistoryStop", moment(time[-1])),
+        aastex.Variable("fluxHistoryCadence", np.round(cadence)),
+        aastex.Variable(
+            "fluxHistoryStill", time[figure.index_still()].strftime("%H:%M:%S")
+        ),
+        aastex.Variable("fluxRadiusBase", figure.radii["base"]),
+        aastex.Variable("fluxRadiusFootpoint", figure.radii["footpoint"]),
+        aastex.Variable("fluxThreshold", figure.threshold),
+        aastex.Variable("fluxNoise", np.round(np.median(figure.noise().ndarray), 1)),
+        aastex.Variable("fluxLimit", figure.limit),
     ]
 
 
@@ -197,6 +224,7 @@ def variables() -> list[aastex.Variable]:
         + _backgrounds()
         + _dem_movie()
         + _dem_regions()
+        + _flux_history()
         + _length()
         + _lifetime()
         + _light_curves()

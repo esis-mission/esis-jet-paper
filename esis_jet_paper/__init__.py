@@ -7,7 +7,15 @@ from ._acknowledgments import acknowledgments
 from ._acronyms import acronyms
 from ._authors import authors
 from ._colors import color_aia, color_esis, color_xrt
-from ._data import aia, aia_304, archive, channels, directory_default, xrt
+from ._data import (
+    aia,
+    aia_304,
+    archive,
+    channels,
+    directory_default,
+    hmi_history,
+    xrt,
+)
 from ._dem import Inversion, dem, temperature_response
 from ._document import document, pdf
 from ._keywords import keywords
@@ -33,6 +41,7 @@ __all__ = [
     "directory_default",
     "document",
     "figures",
+    "hmi_history",
     "keywords",
     "linestyles",
     "pdf",
