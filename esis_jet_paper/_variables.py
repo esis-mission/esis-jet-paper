@@ -92,6 +92,25 @@ def _dem_regions() -> list[aastex.Variable]:
     ]
 
 
+def _lifetime() -> list[aastex.Variable]:
+    """
+    The lifetime of event E, measured from its light curves by
+    :func:`esis_jet_paper.figures._light_curves.lifetime`.
+    """
+    figure = esis_jet_paper.figures._light_curves
+    start, stop = figure.lifetime()
+    duration = (stop - start).to(u.min)
+    return [
+        aastex.Variable("eventDuration", np.round(duration)),
+        aastex.Variable("eventStart", start.strftime("%H:%M:%S")),
+        aastex.Variable("eventStop", stop.strftime("%H:%M:%S")),
+        aastex.Variable(
+            "lifetimeFraction", round(100 * figure.fraction_lifetime) * u.percent
+        ),
+        aastex.Variable("lifetimeQuiet", figure.duration_quiet),
+    ]
+
+
 def _light_curves() -> list[aastex.Variable]:
     """The numbers in the caption of :func:`esis_jet_paper.figures.light_curves`."""
     figure = esis_jet_paper.figures._light_curves
@@ -99,6 +118,13 @@ def _light_curves() -> list[aastex.Variable]:
     return [
         aastex.Variable("lightCurvesStart", start.strftime("%H:%M:%S")),
         aastex.Variable("lightCurvesStop", stop.strftime("%H:%M:%S")),
+    ]
+
+
+def _length() -> list[aastex.Variable]:
+    """The length of event E, :func:`esis_jet_paper._points.length`."""
+    return [
+        aastex.Variable("eventLength", np.round(esis_jet_paper._points.length())),
     ]
 
 
@@ -115,6 +141,17 @@ def _points() -> list[aastex.Variable]:
     ]
 
 
+def _temperature() -> list[aastex.Variable]:
+    """
+    The peak temperature of event E, that of the DEM of its base from AIA and
+    XRT, :func:`esis_jet_paper.figures._dem_regions.temperature_peak`.
+    """
+    temperature = esis_jet_paper.figures._dem_regions.temperature_peak()
+    return [
+        aastex.Variable("temperaturePeak", np.round(temperature.to(u.MK), 1)),
+    ]
+
+
 def _temperature_responses() -> list[aastex.Variable]:
     """
     The numbers in the caption of
@@ -127,6 +164,24 @@ def _temperature_responses() -> list[aastex.Variable]:
     ]
 
 
+def _xrt() -> list[aastex.Variable]:
+    """The plate scale, the field, and the cadence of the images of XRT."""
+    images = esis_jet_paper.xrt()
+
+    # The plate scale of XRT is the same in every image.
+    cdelt = images.inputs.cdelt.position[{"time": 0}].x.ndarray.to(u.arcsec)
+    width = images.outputs.shape["detector_x"] * cdelt
+
+    time = images.inputs.time.ndarray
+    cadence = np.median((time[1:] - time[:~0]).to(u.s))
+
+    return [
+        aastex.Variable("xrtPlateScale", np.round(cdelt, 2)),
+        aastex.Variable("xrtFieldWidth", np.round(width.to(u.arcmin), 1)),
+        aastex.Variable("xrtCadence", np.round(cadence, 1)),
+    ]
+
+
 def variables() -> list[aastex.Variable]:
     """
     A list of LaTeX variables for every numeric quantity cited in the prose.
@@ -136,16 +191,17 @@ def variables() -> list[aastex.Variable]:
     """
     return (
         [
-            _pending("eventDuration"),
-            _pending("eventLength"),
             _pending("velocityBlue"),
             _pending("velocityRed"),
-            _pending("temperaturePeak"),
         ]
         + _backgrounds()
         + _dem_movie()
         + _dem_regions()
+        + _length()
+        + _lifetime()
         + _light_curves()
         + _points()
+        + _temperature()
         + _temperature_responses()
+        + _xrt()
     )

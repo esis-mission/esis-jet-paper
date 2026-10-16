@@ -34,8 +34,11 @@ def temperature() -> aastex.Section:
     (Figure~\ref{fig:demRegions}).
 \item \textbf{Results.}
     The \DEM\ of event E compared with that of its surroundings, its peak temperature
-    (\temperaturePeak), and whether the event has a coronal component visible to \XRT\ or is
-    confined to the \TR, the question raised by \citet{Teriaca2002}.
+    (\temperaturePeak, where the \DEM\ of the base from \AIA\ and \XRT\ in
+    Figure~\ref{fig:demRegions} peaks), and whether the event has a coronal component visible to
+    \XRT\ or is confined to the \TR, the question raised by \citet{Teriaca2002}.
+    The \DEM\ of the base also has a second, cooler peak in the \TR, which \AIA\ and \XRT\
+    constrain poorly and the \ESIS\ lines will pin down.
     Whether the temperature differs between the cusp and the footpoint of the inverted Y.
 \item \textbf{Evolution.}
     The \DEM\ of event E from \AIA\ and \XRT\ for every \XRT\ image from \demMovieStart\ to

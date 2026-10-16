@@ -1,5 +1,6 @@
 import aastex
 import astropy.time
+import astropy.units as u
 import numpy as np
 
 import esis_jet_paper
@@ -48,3 +49,16 @@ def test_saturated():
     )
     assert np.any(saturated)
     assert np.all(np.isnan(curves["base"]) == saturated)
+
+
+def test_lifetime():
+    """
+    Event E begins and ends within the light curves, before and after the
+    exposures of ESIS from 18:06:11 to 18:11:01 UT, and lasts several minutes.
+    """
+    module = esis_jet_paper.figures._light_curves
+    start, stop = module.lifetime()
+    first, last = module.window()
+    assert first < start < astropy.time.Time("2019-09-30T18:06:11")
+    assert astropy.time.Time("2019-09-30T18:11:01") < stop < last
+    assert 5 * u.min < stop - start < 30 * u.min
