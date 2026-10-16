@@ -24,7 +24,10 @@ def test_inversions():
     index = esis_jet_paper.figures._dem_movie.index_still()
     observed = esis_jet_paper.dem().dem.outputs[{"time": index}][spire]
     inversions = esis_jet_paper.figures._dem_backgrounds.inversions()
-    assert list(inversions) == [esis_jet_paper._dem._size_background, module.size_wide]
+    assert list(inversions) == [
+        esis_jet_paper._dem._size_background,
+        module.size_narrow,
+    ]
     for size, (dem, chi2) in inversions.items():
         assert dem.outputs.shape == observed.shape | chi2.shape, size
         assert 0.8 < float(np.median(chi2).ndarray) < 1.2, size

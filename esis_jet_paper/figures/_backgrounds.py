@@ -12,13 +12,13 @@ import esis_jet_paper
 
 __all__ = [
     "backgrounds",
-    "size_wide",
+    "size_narrow",
 ]
 
-size_wide = 61
+size_narrow = 31
 """
 The width, in pixels of XRT, of the background compared with that which
-:func:`esis_jet_paper.dem` subtracts, about twice as wide.
+:func:`esis_jet_paper.dem` subtracts, about half as wide.
 """
 
 _limit_residual = 0.3
@@ -34,9 +34,9 @@ _axis = ("detector_x", "detector_y")
 def _sizes() -> tuple[int, int]:
     """
     The widths of the two backgrounds compared, that which
-    :func:`esis_jet_paper.dem` subtracts and :data:`size_wide`.
+    :func:`esis_jet_paper.dem` subtracts and :data:`size_narrow`.
     """
-    return esis_jet_paper._dem._size_background, size_wide
+    return esis_jet_paper._dem._size_background, size_narrow
 
 
 @functools.cache
@@ -162,8 +162,8 @@ Figure~\ref{fig:demMovie}, in each \EUV\ channel of \AIA, labeled by its wavelen
 \XRT\ Al\_poly (top row), on the pixels of \XRT\ from which the \DEM\ is inverted.
 Beneath them are two backgrounds, the mean of the \demBackgroundSize\ by \demBackgroundSize\
 pixels (\demBackgroundWidth) around each pixel, which the bottom row of
-Figure~\ref{fig:demMovie} subtracts, and that of the \backgroundsSizeWide\ by
-\backgroundsSizeWide\ pixels (\backgroundsWidthWide) around it, each without the brightest and
+Figure~\ref{fig:demMovie} subtracts, and that of the \backgroundsSizeNarrow\ by
+\backgroundsSizeNarrow\ pixels (\backgroundsWidthNarrow) around it, each without the brightest and
 the faintest \demBackgroundProportion\ of them, and beneath those, what is left when each is
 subtracted (bottom two rows, red where the intensity is above the background and blue where it
 is below).

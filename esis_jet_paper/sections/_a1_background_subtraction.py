@@ -19,8 +19,8 @@ The bottom row of Figure~\ref{fig:demMovie} is inverted from the intensities of 
 their background, the trimmed mean of the \demBackgroundSize\ by \demBackgroundSize\ pixels of
 \XRT\ (\demBackgroundWidth) around it.
 Figures~\ref{fig:backgrounds} and~\ref{fig:demBackgrounds} compare that background, at the time
-of the still, with the trimmed mean of the \backgroundsSizeWide\ by \backgroundsSizeWide\ pixels
-(\backgroundsWidthWide) around each pixel.
+of the still, with the trimmed mean of the \backgroundsSizeNarrow\ by \backgroundsSizeNarrow\
+pixels (\backgroundsWidthNarrow) around each pixel.
 The wider background is smoother, and leaves more of the loops around event E behind when it is
 subtracted.
 Under the base of event E, either background is a small part of the intensity in every channel.

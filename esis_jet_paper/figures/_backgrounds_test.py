@@ -23,7 +23,10 @@ def test_still():
     """
     module = esis_jet_paper.figures._backgrounds
     observation, background = module._still()
-    assert list(background) == [esis_jet_paper._dem._size_background, module.size_wide]
+    assert list(background) == [
+        esis_jet_paper._dem._size_background,
+        module.size_narrow,
+    ]
 
     index = module._nearest(observation)
     for size, intensity in background.items():
@@ -32,5 +35,5 @@ def test_still():
         assert np.all(fraction[index["base"]] < 0.3), size
         assert np.all(fraction[index["spire"]] > 0.5), size
 
-    narrow, wide = background.values()
+    wide, narrow = background.values()
     assert np.all(np.std(wide, axis=_axis) < np.std(narrow, axis=_axis))
