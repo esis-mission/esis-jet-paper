@@ -1,5 +1,7 @@
 import aastex
 
+import esis_jet_paper
+
 __all__ = [
     "topology",
 ]
@@ -12,7 +14,7 @@ def topology() -> aastex.Section:
 \item \textbf{Magnetograms.}
     The \HMI\ \LOSShort\ magnetograms \citep{Scherrer2012} around the time of the flight, their
     co-alignment with \ESIS, and the evolution of the photospheric flux beneath event E over the
-    preceding hours: is there a parasitic polarity at the footpoint of the inverted Y, and is it
+    preceding day (Figure~\ref{fig:fluxHistory}): is there a parasitic polarity at the footpoint of the inverted Y, and is it
     emerging or cancelling \citep{Panesar2016}?
 \item \textbf{\MCTCapital} \citep{Longcope2002,Longcope2005}.
     Partition the magnetogram into unipolar sources, represent each as a point charge, and compute
@@ -31,8 +33,10 @@ def topology() -> aastex.Section:
 \item \textbf{Robustness.}
     How the topology changes with the partitioning threshold and from one magnetogram to the next,
     and whether the features that matter to event E persist in the weak fields of the quiet Sun.
-\item \textbf{Figures:} the magnetogram with its sources and separatrix footprints;
+\item \textbf{Figures:} the flux beneath event E over the day before it
+    (Figure~\ref{fig:fluxHistory}); the magnetogram with its sources and separatrix footprints;
     the same footprints overlaid on the Doppler maps; a three-dimensional view of the separatrices
     and the null.
 \end{outline}""")
+    result.append(esis_jet_paper.figures.flux_history())
     return result

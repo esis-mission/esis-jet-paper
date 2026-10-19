@@ -10,6 +10,9 @@ def test_archive():
     assert (directory / "complete").is_file()
     assert len(list((directory / "xrt").glob("*.fits"))) == 64
     assert len(list((directory / "aia").glob("*.fits"))) == 7 * 105
+    assert len(list((directory / "hmi").glob("*.fits"))) == 28
+    assert len(list((directory / "hmi_history").glob("*.fits"))) == 131
+    assert len(list((directory / "iris").glob("*.fits.gz"))) == 1
 
 
 def test_xrt():
@@ -54,3 +57,20 @@ def test_aia_304():
     first = esis_jet_paper.aia().inputs.position[{"time": 0, "channel": 0}]
     assert np.all(np.abs(position.x - first.x) < 0.01 * u.arcsec)
     assert np.all(np.abs(position.y - first.y) < 0.01 * u.arcsec)
+
+
+def test_hmi_history():
+    """
+    The 720 second magnetograms from 18:00 TAI on September 29 to 20:00 TAI
+    on September 30 are in order of time, in gauss, and finite.
+    """
+    images = esis_jet_paper.hmi_history()
+    assert images.outputs.shape == {"time": 131, "detector_y": 400, "detector_x": 400}
+    assert images.outputs.unit == u.G
+    assert np.all(np.isfinite(images.outputs))
+    time = images.inputs.time.ndarray
+    assert np.all(time[1:] > time[:-1])
+    assert astropy.time.Time("2019-09-29T17:50") < time.min()
+    assert time.max() < astropy.time.Time("2019-09-30T20:00")
+    cadence = (time[1:] - time[:-1]).to(u.s)
+    assert np.all(np.abs(cadence - 720 * u.s) < 1 * u.s)
