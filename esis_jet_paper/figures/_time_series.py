@@ -55,7 +55,7 @@ _label_esis = r"ESIS O\,\textsc{v}"
 _name_movie = "time-series-event-e.mp4"
 """The name of the file of the movie."""
 
-_dpi_movie = 200
+_dpi_movie = 180
 """The resolution of the movie, in pixels per inch of the figure."""
 
 
@@ -70,7 +70,10 @@ class _Panel:
     """The helioprojective coordinates of the vertices of every pixel."""
 
     intensity: na.AbstractScalar
-    """What each pixel shows, in the unit of :attr:`label_colorbar`, without it."""
+    """
+    What each pixel shows, without its unit, which the caption gives: DN per
+    second for the channels, and gauss for the magnetograms.
+    """
 
     time: astropy.time.Time
     """The middle of each exposure."""
@@ -80,9 +83,6 @@ class _Panel:
 
     norm: matplotlib.colors.Normalize
     """The brightness of the images, the same in every frame."""
-
-    label_colorbar: str
-    """The label of the colorbar of the images."""
 
     def index(self, time: astropy.time.Time) -> int:
         """The index of the image whose exposure is centered closest to `time`."""
@@ -153,7 +153,6 @@ def _panel_aia(images: sdo.aia.Filtergram, wavelength: int) -> _Panel:
             wavelength * u.AA
         ),
         norm=_norm(position, intensity),
-        label_colorbar=r"DN\,s$^{-1}$",
     )
 
 
@@ -170,7 +169,6 @@ def _panel_xrt() -> _Panel:
         time=images.inputs.time.ndarray + images.timedelta.ndarray / 2,
         cmap=sunpy.visualization.colormaps.color_tables.xrt_color_table(),
         norm=_norm(position, intensity),
-        label_colorbar=r"DN\,s$^{-1}$",
     )
 
 
@@ -191,7 +189,6 @@ def _panel_hmi() -> _Panel:
             vmax=limit.to_value(u.G),
             clip=True,
         ),
-        label_colorbar=r"$B_\mathrm{LOS}$ (G)",
     )
 
 
@@ -257,11 +254,16 @@ def _draw_esis(ax: plt.Axes, time: astropy.time.Time) -> None:
 
 
 def _colorbar(fig: plt.Figure, panel: _Panel, ax: plt.Axes) -> None:
-    """Add the colorbar of `panel` beside `ax`, with plain numbers on a logarithmic scale."""
+    """
+    Add the colorbar of `panel` beside `ax`, with plain numbers on a
+    logarithmic scale.
+
+    It is not labeled, so that the panels can be larger; the caption gives
+    its unit.
+    """
     colorbar = fig.colorbar(
         matplotlib.cm.ScalarMappable(norm=panel.norm, cmap=panel.cmap),
         ax=ax,
-        label=panel.label_colorbar,
     )
     if isinstance(panel.norm, matplotlib.colors.LogNorm):
         axis = colorbar.ax.yaxis
@@ -298,8 +300,11 @@ def _frame() -> tuple[plt.Figure, Callable[[astropy.time.Time], None]]:
         ncols=3,
         sharex=True,
         sharey=True,
-        figsize=(aastex.text_width_inches, 0.55 * aastex.text_width_inches),
-        constrained_layout=True,
+        # Just tall enough that the square panels fill the width of the page.
+        figsize=(aastex.text_width_inches, 0.62 * aastex.text_width_inches),
+        # Packs the square panels together, instead of spreading the width
+        # they leave over between the columns.
+        layout="compressed",
     )
     axs = axs.ravel()
     # The channels of AIA along the top row, and ESIS, XRT, and HMI below.
@@ -347,8 +352,8 @@ def _movie() -> pathlib.Path:
             extra_args=["-pix_fmt", "yuv420p"],
         )
         # Less than the DEM movie, so that the movie stays small enough for
-        # the AAS journals, with still about two pixels of the screen for
-        # each pixel of AIA.
+        # the AAS journals, with still more pixels of the screen across each
+        # panel (about 290) than of AIA (about 215).
         with writer.saving(fig, movie, dpi=_dpi_movie):
             # Constrained layout settles on the second draw of axes with a
             # fixed aspect, so draw once before the first frame is recorded,
@@ -389,6 +394,8 @@ Event E in \ESIS\ \OV, in \AIA\ \SIlist{304;171;193}{\angstrom}, in \XRT\ Al\_po
 Figure~\ref{fig:demMovie}, over its field.
 Each panel shows the image of its instrument whose exposure is centered closest to that time,
 on its own pixels, and is labeled with the middle of that exposure.
+The colorbars give the intensity of \AIA\ and \XRT\ in DN\,s$^{-1}$, and the \LOSShort\ field of
+\HMI\ in gauss.
 The brightness of each channel is on a logarithmic scale between percentiles
 \timeSeriesPercentileMin\ and \demMoviePercentile\ of its intensity over the field in every
 frame of the animation, and the magnetograms saturate at $\pm$\timeSeriesLimit, white where the
