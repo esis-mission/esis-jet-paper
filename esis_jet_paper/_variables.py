@@ -1,4 +1,5 @@
 import aastex
+import astropy.time
 import astropy.units as u
 import numpy as np
 
@@ -164,6 +165,28 @@ def _temperature_responses() -> list[aastex.Variable]:
     ]
 
 
+def _time_series() -> list[aastex.Variable]:
+    """The numbers in the caption of :func:`esis_jet_paper.figures.time_series`."""
+    figure = esis_jet_paper.figures._time_series
+    frames = figure.frames()
+    fps = esis_jet_paper.figures._dem_movie.fps
+
+    def clock(time: astropy.time.Time) -> str:
+        return time.strftime("%H:%M:%S")
+
+    return [
+        aastex.Variable("esisStart", clock(figure.exposures_esis[0])),
+        aastex.Variable("esisStop", clock(figure.exposures_esis[1])),
+        aastex.Variable("timeSeriesStill", clock(frames[figure.index_still()])),
+        aastex.Variable("timeSeriesPercentileMin", figure.percentile_min),
+        aastex.Variable("timeSeriesLimit", figure.limit),
+        aastex.Variable("timeSeriesFrames", frames.size),
+        aastex.Variable("timeSeriesStart", clock(frames[0])),
+        aastex.Variable("timeSeriesStop", clock(frames[-1])),
+        aastex.Variable("timeSeriesDuration", round(frames.size / fps) * u.s),
+    ]
+
+
 def _xrt() -> list[aastex.Variable]:
     """The plate scale, the field, and the cadence of the images of XRT."""
     images = esis_jet_paper.xrt()
@@ -203,5 +226,6 @@ def variables() -> list[aastex.Variable]:
         + _points()
         + _temperature()
         + _temperature_responses()
+        + _time_series()
         + _xrt()
     )
