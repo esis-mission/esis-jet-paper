@@ -6,6 +6,7 @@ import shutil
 import tarfile
 import urllib.request
 
+import astropy.io.fits
 import astropy.units as u
 import hinode
 import named_arrays as na
@@ -18,6 +19,7 @@ __all__ = [
     "archive",
     "channels",
     "directory_default",
+    "hmi",
     "xrt",
 ]
 
@@ -27,7 +29,7 @@ directory_default = pathlib.Path.home() / ".esis_jet_paper"
 channels = na.ScalarArray([94, 131, 171, 193, 211, 335] * u.AA, axes="channel")
 """The EUV channels of AIA which the differential emission measure uses."""
 
-_tag = "event-e-v1.0"
+_tag = "event-e-v1.1"
 """The release of ``esis-data-2019`` which holds the images of event E."""
 
 _url_archive = (
@@ -36,7 +38,7 @@ _url_archive = (
 )
 """Where the archive of the images of event E is published."""
 
-_sha256_archive = "11ea0e91104e3daf0849c8e397ee27b97482bf28c8802e4147c34dacb6caa941"
+_sha256_archive = "1cb9bb2660da667096c368059f033b73bf639a56ecc9338705d15b9636ad8ed2"
 """The SHA-256 checksum of the archive at :data:`_url_archive`."""
 
 
@@ -51,14 +53,18 @@ def _sha256(path: pathlib.Path) -> str:
 
 def archive(directory: None | pathlib.Path = None) -> pathlib.Path:
     """
-    The directory holding the AIA and XRT images of event E from 18:00 to
-    18:20 UT, the ``event-e-v1.0`` release of ``esis-data-2019``,
-    downloaded and unpacked the first time it is needed.
+    The directory holding the images of event E, the ``event-e-v1.1``
+    release of ``esis-data-2019``, downloaded and unpacked the first time it
+    is needed.
 
-    The archive holds every Al_poly image of XRT which began in that time,
-    unchanged, in ``xrt/``, and cutouts around event E of the registered
-    images of seven EUV channels of AIA in ``aia/``,
-    each with a manifest of where its files came from.
+    The archive holds every Al_poly image of XRT which began from 18:00 to
+    18:20 UT, unchanged, in ``xrt/``, and cutouts around event E of the
+    registered images of seven EUV channels of AIA in ``aia/``.
+    Beside them are cutouts of the registered line-of-sight magnetograms of
+    HMI, every 45 seconds over the same time in ``hmi/`` and every 720
+    seconds over the day before in ``hmi_history/``, and the slit-jaw images
+    of IRIS at 1400 angstroms, unchanged, in ``iris/``.
+    Each directory has a manifest of where its files came from.
 
     Parameters
     ----------
@@ -165,3 +171,41 @@ def aia_304() -> sdo.aia.Filtergram:
     like :func:`aia` along the axes ``time`` and ``channel``.
     """
     return _aia(na.ScalarArray([304] * u.AA, axes="channel"))
+
+
+def _magnetograms(paths: list[pathlib.Path]) -> sdo.hmi.Magnetogram:
+    """
+    The cutouts of registered magnetograms at `paths`, along the axis
+    ``time``.
+
+    :meth:`sdo.hmi.Magnetogram.from_fits` takes the keywords of each file
+    from the JSOC, since the files the JSOC serves have none, so here they
+    are taken from the header of each cutout instead.
+    """
+    names = ["DATE-OBS", "BUNIT", "CUNIT1"]
+    names += ["CRVAL1", "CRVAL2", "CRPIX1", "CRPIX2", "CDELT1", "CDELT2"]
+    keywords = {name: [] for name in names + ["CROTA2"]}
+    for path in paths:
+        header = astropy.io.fits.getheader(path)
+        for name in names:
+            keywords[name].append(header[name])
+        # Registration rotates each magnetogram to solar north up, and leaves
+        # the rotation that remains as a matrix rather than as an angle.
+        angle = np.arctan2(header["PC2_1"], header["PC1_1"])
+        keywords["CROTA2"].append(np.rad2deg(angle))
+    return sdo.hmi.Magnetogram.from_fits(
+        path=na.ScalarArray(np.array([str(p) for p in paths], dtype=object), "time"),
+        keywords={k: na.ScalarArray(np.array(v), "time") for k, v in keywords.items()},
+    )
+
+
+@functools.cache
+def hmi() -> sdo.hmi.Magnetogram:
+    """
+    The 45 second line-of-sight magnetograms of HMI in every slot from
+    18:00:00 to 18:20:15 TAI, in order of time, in gauss, along the axis
+    ``time``, on the grid of :func:`aia`.
+    """
+    directory = archive() / "hmi"
+    rows = sorted(_manifest(directory), key=lambda row: row["T_REC"])
+    return _magnetograms([directory / row["file"] for row in rows])
