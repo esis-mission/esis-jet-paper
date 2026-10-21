@@ -8,15 +8,24 @@ __all__ = [
 def acknowledgments() -> aastex.Acknowledgments:
     """
     The acknowledgments of this article.
+
+    The grants are those the instrument paper acknowledges: those of
+    Courrier (2020), whose chapter on ESIS that article grew from, and of
+    Parker et al. (2022), the paper on the first flight. The sentence on
+    CHIANTI is the acknowledgment CHIANTI asks of the articles which use it,
+    as the temperature responses and the differential emission measures do.
     """
     result = aastex.Acknowledgments()
     result.append(r"""
-\roy{Grant numbers for the ESIS flight and analysis.}
+We gratefully acknowledge the support of the NASA Heliophysics Low-Cost Access to Space program, grant number
+NNX14AK71G, and of the NASA Earth and Space Science Fellowship program, grant number 80NSSC17K0524.
 \textit{SDO} is a mission of NASA's Living With a Star program, and the \AIA\ and \HMI\ data are
 courtesy of NASA/SDO and the \AIA\ and \HMI\ science teams.
 \textit{Hinode} is a Japanese mission developed and launched by ISAS/JAXA, with NAOJ as domestic
 partner and NASA and STFC (UK) as international partners.
 It is operated by these agencies in co-operation with ESA and NSC (Norway).
+CHIANTI is a collaborative project involving George Mason University, the University of Michigan (USA), University of
+Cambridge (UK) and NASA Goddard Space Flight Center (USA).
 This article is an executable paper: every figure, table, and number in it is computed from the
 data when the article is built, and the code that builds it is available at
 \url{https://github.com/esis-mission/esis-jet-paper}.""")
