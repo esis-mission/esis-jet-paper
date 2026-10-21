@@ -8,10 +8,15 @@ __all__ = [
 def acknowledgments() -> aastex.Acknowledgments:
     """
     The acknowledgments of this article.
+
+    The grants are those the instrument paper acknowledges: those of
+    Courrier (2020), whose chapter on ESIS that article grew from, and of
+    Parker et al. (2022), the paper on the first flight.
     """
     result = aastex.Acknowledgments()
     result.append(r"""
-\roy{Grant numbers for the ESIS flight and analysis.}
+We gratefully acknowledge the support of the NASA Heliophysics Low-Cost Access to Space program, grant number
+NNX14AK71G, and of the NASA Earth and Space Science Fellowship program, grant number 80NSSC17K0524.
 \textit{SDO} is a mission of NASA's Living With a Star program, and the \AIA\ and \HMI\ data are
 courtesy of NASA/SDO and the \AIA\ and \HMI\ science teams.
 \textit{Hinode} is a Japanese mission developed and launched by ISAS/JAXA, with NAOJ as domestic
