@@ -39,8 +39,8 @@ def observations() -> aastex.Section:
     after the \ESIS\ exposures from \AIA, over which its base is brighter in \AIA\
     \SI{304}{\angstrom}, the channel in which it brightens first, than before the event by more
     than \lifetimeFraction\ of its peak brightening.
-    Its inverted-Y morphology in \OV\ and in the \AIA\ channels, an order of magnitude brighter than
-    the surrounding network, and the northward drift of its blue-shifted side by about
+    Its inverted-Y morphology in \OV\ and in the \AIA\ channels (Figure~\ref{fig:timeSeries}), an
+    order of magnitude brighter than the surrounding network, and the northward drift of its blue-shifted side by about
     \ang{;;11} over four minutes.
     Its length (\eventLength), in the plane of the sky from its base to its northern footpoint,
     where the fainter arc which continues its spire ends.
@@ -55,7 +55,9 @@ def observations() -> aastex.Section:
     \SIrange{100}{200}{\kilo\meter\per\second} in the plane of the sky.
 \item \textbf{Figures:} the full \ESIS\ field with event E boxed;
     the light curves of event E (Figure~\ref{fig:lightCurves});
-    a time series of event E in \ESIS\ \OV, \AIA\ \SIlist{304;171;193}{\angstrom}, \XRT, and \HMI.
+    a time series of event E in \ESIS\ \OV, \AIA\ \SIlist{304;171;193}{\angstrom}, \XRT, and \HMI\
+    (Figure~\ref{fig:timeSeries}).
 \end{outline}""")
     result.append(esis_jet_paper.figures.light_curves())
+    result.append(esis_jet_paper.figures.time_series())
     return result

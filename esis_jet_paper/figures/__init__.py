@@ -9,6 +9,7 @@ from ._dem_movie import dem_movie
 from ._dem_regions import dem_regions
 from ._light_curves import light_curves
 from ._temperature_responses import temperature_responses
+from ._time_series import time_series
 
 __all__ = [
     "backgrounds",
@@ -17,4 +18,5 @@ __all__ = [
     "dem_regions",
     "light_curves",
     "temperature_responses",
+    "time_series",
 ]
